@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QWidget" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>695</width>
+    <height>443</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QWidget" name="widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QRadioButton" name="countDescriptor">
+        <property name="text">
+         <string>Расчёт дескрипторов</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="compareImages">
+        <property name="text">
+         <string>Сравнение изображений</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="testSift">
+        <property name="text">
+         <string>Тестирование</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Настройки</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QWidget" name="rightWidget" native="true"/>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
