@@ -6,6 +6,8 @@ TARGET = ui
 TEMPLATE = app
 QMAKE_CXXFLAGS += -std=c++0x
 
+INCLUDEPATH += ../core ../sift ../spatial/src
+
 SOURCES += main.cc\
         mainwindow.cc \
     descriptorwidget.cc \

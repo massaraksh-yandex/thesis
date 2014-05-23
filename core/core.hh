@@ -7,10 +7,7 @@
 #include <QList>
 #include <QVector>
 
-#include "../CImg.h"
-#include "noise.hh"
-#include "../sift/sift.hh"
-
+#include "global_core.hh"
 
 typedef void (*BuildDescriptorsByName)(std::string *name, Descriptor* out);
 typedef void (*BuildDescriptorsByImage)(CImage *name, Descriptor* out);
@@ -28,6 +25,21 @@ enum LogType
 };
 }
 Q_DECLARE_METATYPE(Log::LogType)
+
+struct TestingResult
+{
+    QString filename;
+    QList<double> results;
+
+    TestingResult() { }
+    TestingResult(QString name, QList<double> res)
+        : filename(name), results(res)
+    { }
+};
+typedef QList<TestingResult> TestingResults;
+Q_DECLARE_METATYPE(TestingResult)
+Q_DECLARE_METATYPE(TestingResults)
+
 
 class Core : public QObject
 {
@@ -54,12 +66,12 @@ public slots:
     void testImages(QString dir, Noise::Noises types);
 
 signals:
-    void log(Log::LogType type, QString message);
+    void log(Log::LogType type, int indent, QString message);
     void progress(int value, int maximum);
 
     void computingFinished(DescriptorId);
     void writingFinished();
-    void testingFinished();
+    void testingFinished(TestingResults);
 };
 
 #endif // CORE_HH

@@ -12,10 +12,13 @@ LIBS += -L../build-thesis/sift -libsift
 QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES += core.cc \
-    noise.cc
+    noise.cc \
+    functionsfortest.cc
 
 HEADERS += core.hh \
-    noise.hh
+    noise.hh \
+    global_core.hh \
+    functionsfortest.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

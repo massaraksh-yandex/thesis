@@ -4,79 +4,18 @@
 #include <QFile>
 #include <QDir>
 
+#include "functionsfortest.hh"
 #include "core.hh"
-#include "point_multiset.hpp"
-#include "bits/spatial_euclidian_neighbor.hpp"
 
-#include <string>
 #include <functional>
+#include <algorithm>
+#include <string>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/moment.hpp>
-#include <boost/accumulators/statistics/moment.hpp>
-
+typedef spatial::point_multiset<128, QList<double> > KDTree;
+typedef QSharedPointer<KDTree > KDTreePtr;
 
 BuildDescriptorsByName Core::computeByName;
 BuildDescriptorsByImage Core::computeByImage;
-
-typedef QSharedPointer<CImage> CImagePtr;
-typedef QSharedPointer<Descriptor> DescriptorPtr;
-typedef spatial::point_multiset<128, QList<double> > KDTree;
-typedef QSharedPointer<KDTree > KDTreePtr;
-#include <algorithm>
-
-using namespace boost::accumulators;
-
-QPair<double, double> compareDescriptors(DescriptorPtr src, KDTreePtr tree)
-{
-    KDTree& tr = *tree.data();
-    Descriptor d = *src;
-
-    QList<double> zero;
-    std::fill_n(zero.begin(), 128, 0.0);
-    QList<double> results;
-    results.reserve(d.size());
-    accumulator_set<double, stats<tag::mean, tag::moment<2> > > acc;
-    for(int i = 0; i < d.size(); i++)
-    {
-        spatial::euclidian<KDTree, double, double> metric;
-        auto begin = spatial::euclidian_neighbor_begin(tr, d[i]);
-
-        double first = metric.distance_to_key(128, zero, *begin++);
-        double second = metric.distance_to_key(128, zero, *begin);;
-
-        acc(second / first);
-    }
-
-    return qMakePair(mean(acc), moment<2>(acc));
-}
-
-CImagePtr computeNoiseImage(CImagePtr src, Noise::Type type)
-{
-    CImagePtr im(new CImage(*im));
-
-    switch(type.type)
-    {
-    case Noise::Gaussian: Noise::gaussianNoise(*im, type.value); break;
-    case Noise::SaltAndPepper: Noise::saltAndPepperNoise(*im, type.value); break;
-    default:break;
-    }
-
-    return im;
-}
-
-KDTreePtr buildKDTrees(DescriptorPtr d)
-{
-    KDTreePtr tree(new KDTree());
-    for(int i = 0; i != d->size(); i++)
-    {
-        tree->insert(d->at(i));
-    }
-
-    return tree;
-}
 
 DescriptorPtr computeDescriptor(CImagePtr img)
 {
@@ -94,7 +33,7 @@ DescriptorId Core::generateId() const
 void Core::load()
 {
     if(!lib.load()) {
-        emit log(Log::Error, "Cannot load library " + lib.fileName());
+        emit log(Log::Error, 0, "Cannot load library " + lib.fileName());
         return;
     }
 
@@ -117,14 +56,14 @@ void Core::writeDescriptor(DescriptorId id, QString name)
 {
     if(data.size() >= id)
     {
-        emit log(Log::Error, "Unknown descriptor " + QString::number(id));
+        emit log(Log::Error, 0, "Unknown descriptor " + QString::number(id));
         return;
     }
 
     QFile file(name);
     if(file.open(QFile::ReadOnly | QFile::Text))
     {
-        emit log(Log::Error, "Cannot open file " + name);
+        emit log(Log::Error, 0, "Cannot open file " + name);
         return;
     }
 
@@ -153,9 +92,9 @@ void Core::testImages(QString dirName, Noise::Noises types)
     dir.setNameFilters(QStringList() << "*.jpg" << "*.png");
 
     QFileInfoList files = dir.entryInfoList();
+    TestingResults results;
 
     emit progress(0, files.size());
-    QList<QPair<double, double> > results;
     for(int i = 0; i < files.size(); i++)
     {
         QFileInfo& fi = files[i];
@@ -163,43 +102,42 @@ void Core::testImages(QString dirName, Noise::Noises types)
         {
             CImagePtr image(new CImage());
             image->load(fi.absoluteFilePath().toStdString().c_str());
-            emit log(Log::Message, QString("Файл").arg(fi.fileName()));
+            emit log(Log::Message, 0, QString("Файл").arg(fi.fileName()));
 
             std::function<CImagePtr(Noise::Type)> buildNoised = [image](Noise::Type type) { return computeNoiseImage(image, type); };
 
             auto images = QtConcurrent::blockingMapped<QList<CImagePtr> >(types.begin(), types.end(), buildNoised);
-            emit log(Log::Message, QString("\tСозданы изображения с шумами"));
+            emit log(Log::Message, 1, QString("Созданы изображения с шумами"));
 
             images.push_back(image);
 
             auto descriptors = QtConcurrent::blockingMapped<QList<DescriptorPtr> >(images, computeDescriptor);
-            emit log(Log::Message, QString("\tДескрипторы посчитаны"));
+            emit log(Log::Message, 1, QString("Дескрипторы посчитаны"));
 
             DescriptorPtr sourceDescr = descriptors.last();
             descriptors.pop_back();
 
             auto forest = QtConcurrent::blockingMapped<QList<KDTreePtr> >(descriptors, buildKDTrees);
-            emit log(Log::Message, QString("\tК-мерные деревья сформированы"));
+            emit log(Log::Message, 1, QString("К-мерные деревья сформированы"));
 
 
-            std::function<QPair<double, double>(KDTreePtr)> compareTrees = [sourceDescr](KDTreePtr tree) { return compareDescriptors(sourceDescr, tree); };
+            std::function<double(KDTreePtr)> compareTrees = [sourceDescr](KDTreePtr tree) { return compareDescriptors(sourceDescr, tree); };
 
-            QList<QPair<double, double> > currentResults =
-                    QtConcurrent::blockingMapped<QList<QPair<double, double> > >(forest, compareTrees);
+            QList<double> currentResults = QtConcurrent::blockingMapped<QList<double> >(forest, compareTrees);
 
-            emit log(Log::Message, QString("\tОбработка закончена"));
+            emit log(Log::Message, 1, QString("Обработка закончена"));
 
-            results += currentResults;
+            results.push_back(TestingResult(fi.fileName(), currentResults));
         }
         catch(...)
         {
-            emit log(Log::Fail, QString("%1: Ошибка, пропускается...").arg(fi.fileName()));
+            emit log(Log::Fail, 0, QString("%1: Ошибка, пропускается...").arg(fi.fileName()));
             continue;
         }
 
         emit progress(i+1, files.size());
     }
 
-    emit testingFinished();
+    emit testingFinished(results);
 }
 
