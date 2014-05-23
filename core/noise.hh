@@ -1,8 +1,6 @@
 #ifndef NOISE_HH
 #define NOISE_HH
 
-#include <QMetaType>
-#undef Bool
 #include "../CImg.h"
 #include <QList>
 
@@ -21,12 +19,12 @@ namespace Noise
     {
         NoiseType type;
         double value;
+
+        Type(NoiseType nt, double nv) : type(nt), value(nv) {}
+        Type() : type(Gaussian), value(0.0) {}
     };
 
     typedef QList<Type> Noises;
 }
-
-Q_DECLARE_METATYPE(Noise::Type)
-
 
 #endif // NOISE_HH

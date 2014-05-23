@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QVector>
 
+#include "logging.hh"
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,14 +19,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void radioButtonClicked();
+    void toolBoxClicked(int);
+
+signals:
+    void log(Log::LogType type, int shift, QString str);
 
 private:
     Ui::MainWindow *ui;
     QWidget* messages;
     QVector<QWidget*> widgets;
-
-    void setRightWidget(int index);
 };
 
 #endif // MAINWINDOW_HH

@@ -18,7 +18,8 @@ SOURCES += core.cc \
 HEADERS += core.hh \
     noise.hh \
     global_core.hh \
-    functionsfortest.hh
+    functionsfortest.hh \
+    logging.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

@@ -6,72 +6,59 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>695</width>
-    <height>443</height>
+    <width>441</width>
+    <height>366</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QWidget" name="widget" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QToolBox" name="toolBox">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QRadioButton" name="countDescriptor">
-        <property name="text">
-         <string>Расчёт дескрипторов</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="compareImages">
-        <property name="text">
-         <string>Сравнение изображений</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="testSift">
-        <property name="text">
-         <string>Тестирование</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton">
-        <property name="text">
-         <string>Настройки</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QWidget" name="pageComputeDescriptor">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>423</width>
+        <height>261</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Рассчитать дескрипторы</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="pageCompareImages">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>98</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Сравнить изображения</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="pageTestSift">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>98</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Тестирование алгоритма SIFT</string>
+      </attribute>
+     </widget>
     </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QWidget" name="rightWidget" native="true"/>
    </item>
   </layout>
  </widget>

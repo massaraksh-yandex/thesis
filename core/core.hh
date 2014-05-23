@@ -8,23 +8,13 @@
 #include <QVector>
 
 #include "global_core.hh"
+#include "logging.hh"
 
 typedef void (*BuildDescriptorsByName)(std::string *name, Descriptor* out);
 typedef void (*BuildDescriptorsByImage)(CImage *name, Descriptor* out);
 
 typedef unsigned int DescriptorId;
 Q_DECLARE_METATYPE(DescriptorId)
-
-namespace Log
-{
-enum LogType
-{
-    Message,
-    Fail,
-    Error
-};
-}
-Q_DECLARE_METATYPE(Log::LogType)
 
 struct TestingResult
 {

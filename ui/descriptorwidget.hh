@@ -2,6 +2,7 @@
 #define DESCRIPTORWIDGET_HH
 
 #include <QWidget>
+#include "logging.hh"
 
 namespace Ui {
 class DescriptorWidget;
@@ -14,6 +15,9 @@ class DescriptorWidget : public QWidget
 public:
     explicit DescriptorWidget(QWidget *parent = 0);
     ~DescriptorWidget();
+
+signals:
+    void log(Log::LogType type, int shift, QString str);
 
 private:
     Ui::DescriptorWidget *ui;

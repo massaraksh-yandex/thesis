@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QString>
 
+#include "logging.hh"
+
 namespace Ui {
 class MessagesWidget;
 }
@@ -17,7 +19,7 @@ public:
     ~MessagesWidget();
 
 public slots:
-    void log(QString str, int value, int maximum);
+    void log(Log::LogType type, int shift, QString str);
 
 private:
     Ui::MessagesWidget *ui;
