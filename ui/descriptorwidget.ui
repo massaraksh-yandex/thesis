@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>361</width>
-    <height>131</height>
+    <height>282</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -71,20 +71,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QTableWidget" name="tableWidget">
-     <row>
-      <property name="text">
-       <string>New Row</string>
-      </property>
-     </row>
-     <column>
-      <property name="text">
-       <string>New Column</string>
-      </property>
-     </column>
-    </widget>
    </item>
   </layout>
  </widget>

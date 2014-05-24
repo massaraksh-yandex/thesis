@@ -26,3 +26,6 @@ Makefile*
 # QtCreator
 
 *.autosave
+
+CImg.h
+spatial/*

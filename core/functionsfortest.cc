@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "functionsfortest.hh"
 #include "core.hh"
 
@@ -10,20 +11,29 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
     Descriptor d = *src;
 
     auto euclidianFn = [](double sum, double el) { return sum + el*el; };
-    int compared = 0;
+    int failed = 0;
+
+    qDebug() << "in" << d.size();
     for(int i = 0; i < d.size(); i++)
     {
+        if(i % 100 == 1)qDebug() << i;
         auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
 
         double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
         iter++;
+
+        if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
+            continue;
+
         double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
-        if(std::sqrt(second / first) > 2.5)
-            compared++;
+        if(std::sqrt(second / first) <= 2.5)
+            failed++;
     }
 
-    return (double)compared / d.size();
+    qDebug() << "out";
+
+    return (double)(d.size() - failed) / d.size();
 }
 
 CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)

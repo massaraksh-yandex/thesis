@@ -19,12 +19,10 @@ typedef QSharedPointer<KDTree > KDTreePtr;
 DescriptorPtr computeDescriptor(CImagePtr img)
 {
     DescriptorPtr out;
-    qDebug() << "in";
 
     Sift* sift = new Sift(img, 0);
     out = sift->work();
 
-    qDebug() << "out";
     return out;
 }
 

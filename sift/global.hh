@@ -15,5 +15,4 @@ typedef boost::numeric::ublas::matrix<double> Matrix;
 typedef QList<QList<double> > Descriptor;
 typedef QSharedPointer<QList<QList<double> >> DescriptorPtr;
 
-
 #endif // GLOBAL_HH
