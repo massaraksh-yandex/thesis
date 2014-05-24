@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "sift.hh"
 
 #include "sift_math.hh"
@@ -27,7 +28,7 @@ bool Sift::isMin(const CImage &img, float px, int pos_x, int pos_y, bool dont_ch
     if(img(pos_x-1, pos_y  ) >= px) return false;
     if(img(pos_x-1, pos_y+1) >= px) return false;
     if(img(pos_x  , pos_y-1) >= px) return false;
-    if(img(pos_x  , pos_y  ) >= px) if((dont_check_pos_xy == false)) return false;
+    if(img(pos_x  , pos_y  ) >= px) if(!dont_check_pos_xy) return false;
     if(img(pos_x  , pos_y+1) >= px) return false;
     if(img(pos_x+1, pos_y-1) >= px) return false;
     if(img(pos_x+1, pos_y  ) >= px) return false;
@@ -73,8 +74,34 @@ CImage Sift::normalize(const cimg_library::CImg<unsigned char> &img)
     for(int y = 0, ym = img.height(); y < ym; y++)
         for(int x = 0, xm = img.width(); x < xm; x++)
             norm(x,y) = float(img(x,y)) / 255.0f;
-    //
+
     return norm;
+}
+
+Sift::Sift(QObject *obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
+{
+}
+
+Sift::Sift(QString fileName, QObject* obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
+{
+    img.load(fileName.toStdString().c_str());
+}
+
+Sift::Sift(CImagePtr image, QObject* obj) : QObject(obj), CONTRAST(0.03), CORNER(10.0), img(*image)
+{ }
+
+void Sift::load(QString str)
+{
+    _data.dog.clear();
+    _data.points.clear();
+    img.load(str.toStdString().c_str());
+}
+
+void Sift::load(CImagePtr image)
+{
+    _data.dog.clear();
+    _data.points.clear();
+    img = *image;
 }
 
 void Sift::buildPyramid()
@@ -115,7 +142,7 @@ void Sift::buildPyramid()
 }
 
 
-void Sift::getFeatureCandidates()
+int Sift::getFeatureCandidates()
 {
     for(size_t i = 0, im = _data.dog.size(); i < im; i++)
     {
@@ -134,28 +161,29 @@ void Sift::getFeatureCandidates()
                         min = min && isMin(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     for(int k = -1; k < 2; k++)
-                        min = min && isMax(_data.dog[i][s+k], px, x, y, k == 0 );
+                        max = max && isMax(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     if(min || max)
-                        // set the feature candidate
                         _data.points.push_back(Keypoint(x, y, s, i));	// save the feature candidate
                 }
             }
         }
     }
+    return _data.points.size();
 #ifdef _DEBUG
     cout << '\t' << data.points.size() << " local extremas was detected." << endl;
 #endif	// _DEBUG
 }
 
-void Sift::getSubPixelLocations()
+int Sift::getSubPixelLocations()
 {
 
     const int MAX_ITERATIONS = 5;
     //
     bool stable;
     double max_x, max_y, max_z;
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); /*++f_it*/)
+    int y = 0;
+    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++ /*++f_it*/)
     {
         stable = false;
         max_x = _data.dog[f_it->octave][f_it->z].width() - 2;
@@ -187,12 +215,13 @@ void Sift::getSubPixelLocations()
         }
         ++f_it;
     }
+    return _data.points.size();
 #ifdef _DEBUG
     cout << '\t' << data.points.size() << " local extremas remain after the subpixel localization step." << endl;
 #endif	// _DEBUG
 }
 
-void Sift::removeUnstableFeatures()
+int Sift::removeUnstableFeatures()
 {
     // remove data.points with low contrast or points that lie on an edge
     boost::numeric::ublas::matrix<double> H(2,2);
@@ -214,6 +243,7 @@ void Sift::removeUnstableFeatures()
 #ifdef _DEBUG
     cout << '\t' << data.points.size() << " local extremas remain after the low contrast elimination step." << endl;
 #endif	// _DEBUG
+    int y = _data.points.size();
     for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // 2. the edge-like points check
@@ -228,6 +258,8 @@ void Sift::removeUnstableFeatures()
         // the following element
         ++f_it;
     }
+
+    return _data.points.size();
 #ifdef _DEBUG
     cout << '\t' << data.points.size() << " local extremas remain after the edgy points elimination step." << endl;
 #endif	// _DEBUG
@@ -299,49 +331,19 @@ void Sift::computeFeatureAttributes()
     }
 }
 
-SiftData& Sift::work()
+DescriptorPtr Sift::work()
 {
+    DescriptorPtr d(new Descriptor());
     buildPyramid();
     getFeatureCandidates();
     getSubPixelLocations();
     removeUnstableFeatures();
     computeFeatureAttributes();
 
-    return _data;
-}
-
-void SIFTSHARED_EXPORT computeDescriptorsByName(std::string* name, Descriptor *out)
-{
-    if(!name)
-        return;
-    if(!out)
-        return;
-
-    out->clear();
-
-    Sift sift(*name);
-    SiftData& data = sift.work();
-
-    for(Keypoint kp : data.points)
+    for(Keypoint kp : _data.points)
     {
-        buildDescriptor(kp, data.dog, *out);
+        buildDescriptor(kp, _data.dog, *d);
     }
-}
 
-void SIFTSHARED_EXPORT computeDescriptorsByImage(CImage* image, Descriptor* out)
-{
-    if(!image)
-        return;
-    if(!out)
-        return;
-
-    out->clear();
-
-    Sift sift(*image);
-    SiftData& data = sift.work();
-
-    for(Keypoint kp : data.points)
-    {
-        buildDescriptor(kp, data.dog, *out);
-    }
+    return d;
 }

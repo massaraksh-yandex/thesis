@@ -1,26 +1,31 @@
-QT       += testlib core
+#-------------------------------------------------
+#
+# Project created by QtCreator 2014-05-24T16:19:10
+#
+#-------------------------------------------------
 
 QT       -= gui
 
 TARGET = sift
 TEMPLATE = lib
+CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-DEFINES += SIFT_LIBRARY
 
-SOURCES += sift.cc \
-    sift_math.cc \
+SOURCES += \
+    keypoint.cc \
+    main.cpp \
+    sift.cc \
     siftdata.cc \
-    keypoint.cc
+    sift_math.cc
 
-HEADERS += sift.hh\
-        sift_global.hh \
-    sift_math.hh \
+HEADERS += \
     global.hh \
+    keypoint.hh \
+    sift.hh \
     siftdata.hh \
-    keypoint.hh
-
+    sift_math.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

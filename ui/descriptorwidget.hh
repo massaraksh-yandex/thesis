@@ -18,6 +18,12 @@ public:
 
 signals:
     void log(Log::LogType type, int shift, QString str);
+    void accepted(QString);
+
+private slots:
+    void openClicked();
+    void saveClicked();
+    void computeClicked();
 
 private:
     Ui::DescriptorWidget *ui;

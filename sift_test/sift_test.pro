@@ -1,28 +1,26 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2014-05-24T19:45:29
+#
+#-------------------------------------------------
 
-QT       -= gui
-QT       += concurrent
+QT       += testlib gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = core
-TEMPLATE = lib
-CONFIG += staticlib
-DEPENDPATH += . ../sift
-INCLUDEPATH += ../sift ../spatial/src
+
+TARGET = tst_sift_testtest
+CONFIG   += console
+CONFIG   -= app_bundle
+
+TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-SOURCES += core.cc \
-    noise.cc \
-    functionsfortest.cc
 
-HEADERS += core.hh \
-    noise.hh \
-    global_core.hh \
-    functionsfortest.hh \
-    logging.hh
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
+SOURCES += tst_sift_testtest.cc \
+    ../../sift/FeatureExtraction/Math.cpp \
+    ../../sift/FeatureExtraction/SIFT.cpp
+DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sift/release/ -lsift
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sift/debug/ -lsift
@@ -36,3 +34,8 @@ else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/release/sift.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/debug/sift.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../sift/libsift.a
+
+HEADERS += \
+    ../../sift/FeatureExtraction/CImg.h \
+    ../../sift/FeatureExtraction/Math.h \
+    ../../sift/FeatureExtraction/SIFT.h

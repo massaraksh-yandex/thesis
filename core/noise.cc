@@ -1,16 +1,10 @@
 #include <QMetaType>
 #include "noise.hh"
-#include "logging.hh"
 #include "boost/random.hpp"
 #include "boost/generator_iterator.hpp"
 #include <set>
-#undef Bool
 
-
-namespace Noise
-{
-
-void gaussianNoise(cimg_library::CImg<float>& img, double sigma)
+void gaussianImageNoise(cimg_library::CImg<float>& img, double sigma)
 {
     boost::mt19937 rng;
 
@@ -59,8 +53,3 @@ void saltAndPepperNoise(cimg_library::CImg<float>& img, double r)
     }
 }
 
-}
-
-Q_DECLARE_METATYPE(Noise::Type)
-Q_DECLARE_METATYPE(Noise::Noises)
-Q_DECLARE_METATYPE(Log::LogType)

@@ -1,32 +1,38 @@
 #include "mainwindow.hh"
 #include "ui_mainwindow.h"
 
-#include "descriptorwidget.hh"
-#include "comparingwidget.hh"
-#include "messageswidget.hh"
-#include "testingwidget.hh"
+#include "core.hh"
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(Core *core, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow), _busy(false)
 {
     ui->setupUi(this);
 
     messages = new MessagesWidget(this);
     layout()->addWidget(messages);
-    widgets.push_back(new DescriptorWidget(ui->pageComputeDescriptor));
-    widgets.push_back(new ComparingWidget(ui->pageCompareImages));
-    widgets.push_back(new TestingWidget(ui->pageTestSift));
+
+    descriptorWidget = new DescriptorWidget(ui->pageComputeDescriptor);
+    comparingWidget = new ComparingWidget(ui->pageCompareImages);
+    testingWidget = new TestingWidget(ui->pageTestSift);
 
     ui->pageComputeDescriptor->setLayout(new QVBoxLayout(ui->pageComputeDescriptor));
     ui->pageCompareImages->setLayout(new QVBoxLayout(ui->pageCompareImages));
     ui->pageTestSift->setLayout(new QVBoxLayout(ui->pageTestSift));
 
-    ui->pageComputeDescriptor->layout()->addWidget(widgets[0]);
-    ui->pageCompareImages->layout()->addWidget(widgets[1]);
-    ui->pageTestSift->layout()->addWidget(widgets[2]);
+    ui->pageComputeDescriptor->layout()->addWidget(descriptorWidget);
+    ui->pageCompareImages->layout()->addWidget(comparingWidget);
+    ui->pageTestSift->layout()->addWidget(testingWidget);
+
+    connect(testingWidget, SIGNAL(accepted()), SLOT(testAccepted()));
 
     connect(ui->toolBox, SIGNAL(currentChanged(int)), SLOT(toolBoxClicked(int)));
+    toolBoxClicked(0);
+
+    connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
+    connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
+    connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
+    connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
 }
 
 MainWindow::~MainWindow()
@@ -51,6 +57,13 @@ void MainWindow::toolBoxClicked(int i)
         break;
     }
     resize(width(), h + messages->height() + 50);
+}
+
+void MainWindow::testAccepted()
+{
+    emit log(Log::Message, 0, "Тестирование начинается");
+
+    emit startTesting(testingWidget->path(), testingWidget->data());
 }
 
 

@@ -2,5 +2,6 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     ui \
+    core \
     sift \
-    core
+    sift_test

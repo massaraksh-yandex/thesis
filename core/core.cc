@@ -6,21 +6,25 @@
 
 #include "functionsfortest.hh"
 #include "core.hh"
+#include "sift.hh"
 
 #include <functional>
 #include <algorithm>
 #include <string>
 
+
 typedef spatial::point_multiset<128, QList<double> > KDTree;
 typedef QSharedPointer<KDTree > KDTreePtr;
 
-BuildDescriptorsByName Core::computeByName;
-BuildDescriptorsByImage Core::computeByImage;
-
 DescriptorPtr computeDescriptor(CImagePtr img)
 {
-    DescriptorPtr out(new Descriptor());
-    Core::computeByImage(img.data(), out.data());
+    DescriptorPtr out;
+    qDebug() << "in";
+
+    Sift* sift = new Sift(img, 0);
+    out = sift->work();
+
+    qDebug() << "out";
     return out;
 }
 
@@ -30,24 +34,13 @@ DescriptorId Core::generateId() const
     return rr++;
 }
 
-void Core::load()
-{
-    if(!lib.load()) {
-        emit log(Log::Error, 0, "Cannot load library " + lib.fileName());
-        return;
-    }
-
-    computeByName = (BuildDescriptorsByName)lib.resolve("computeDescriptorsByName");
-    computeByImage = (BuildDescriptorsByImage)lib.resolve("computeDescriptorsByImage");
-}
-
 void Core::computeDescriptors(QString image)
 {
     Descriptor desk;
-    std::string str = image.toStdString();
-    computeByName(&str, &desk);
 
-    data.push_back(desk);
+    Sift* sift = new Sift(image, 0);
+
+    data.push_back(sift->work());
 
     emit computingFinished(data.size()-1);
 }
@@ -67,7 +60,7 @@ void Core::writeDescriptor(DescriptorId id, QString name)
         return;
     }
 
-    Descriptor& d = data[id];
+    Descriptor& d = *data[id];
     QTextStream stream(&file);
 
     for(int i = 0; i < d.size(); i++)
@@ -81,15 +74,17 @@ void Core::writeDescriptor(DescriptorId id, QString name)
     file.close();
 }
 
-double Core::compareImages(DescriptorId im1, DescriptorId im2, bool _emit)
+void Core::compareImages(DescriptorId im1, DescriptorId im2)
 {
     
 }
 
-void Core::testImages(QString dirName, Noise::Noises types)
+void Core::testImages(QString dirName, ImageNoises types)
 {
+    qDebug() << "here";
     QDir dir(dirName);
-    dir.setNameFilters(QStringList() << "*.jpg" << "*.png");
+    QStringList l; l << "*.jpg" << "*.png";
+    dir.setNameFilters(l);
 
     QFileInfoList files = dir.entryInfoList();
     TestingResults results;
@@ -102,11 +97,13 @@ void Core::testImages(QString dirName, Noise::Noises types)
         {
             CImagePtr image(new CImage());
             image->load(fi.absoluteFilePath().toStdString().c_str());
-            emit log(Log::Message, 0, QString("Файл").arg(fi.fileName()));
+            emit log(Log::Message, 0, QString("Файл %1").arg(fi.fileName()));
 
-            std::function<CImagePtr(Noise::Type)> buildNoised = [image](Noise::Type type) { return computeNoiseImage(image, type); };
+            std::function<CImagePtr(QPair<ImageNoiseType, double>)> buildNoised =
+                    [image](QPair<ImageNoiseType, double> type) { return computeNoiseImage(image, type); };
 
-            auto images = QtConcurrent::blockingMapped<QList<CImagePtr> >(types.begin(), types.end(), buildNoised);
+            auto images = QtConcurrent::blockingMapped<QList<CImagePtr> >(types.begin(),
+                                                                          types.end(), buildNoised);
             emit log(Log::Message, 1, QString("Созданы изображения с шумами"));
 
             images.push_back(image);
@@ -140,4 +137,14 @@ void Core::testImages(QString dirName, Noise::Noises types)
 
     emit testingFinished(results);
 }
+
+
+Q_DECLARE_METATYPE(DescriptorId)
+Q_DECLARE_METATYPE(TestingResult)
+Q_DECLARE_METATYPE(TestingResults)
+Q_DECLARE_METATYPE(Log::LogType)
+Q_DECLARE_METATYPE(ImageNoiseType)
+Q_DECLARE_METATYPE(ImageNoisePair)
+Q_DECLARE_METATYPE(ImageNoises)
+
 

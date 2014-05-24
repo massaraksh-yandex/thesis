@@ -1,30 +1,32 @@
 #ifndef SIFT_HH
 #define SIFT_HH
 
-#include "sift_global.hh"
+#include <QObject>
+
 #include "global.hh"
 #include "siftdata.hh"
 
-class SIFTSHARED_EXPORT Sift
+class Sift : public QObject
 {
+    Q_OBJECT
+
     cimg_library::CImg<unsigned char> img;
     SiftData _data;
 public:
-    Sift(const std::string fileName) : CONTRAST(0.02), CORNER(10)
-    {
-        img.load(fileName.c_str());
-    }
+    Sift(QObject* obj);
+    Sift(QString fileName, QObject* obj);
+    Sift(CImagePtr image, QObject* obj);
 
-    Sift(const CImage image) : img(image)
-    { }
+    void load(QString str);
+    void load(CImagePtr image);
 
     void buildPyramid();
-    void getFeatureCandidates();
-    void getSubPixelLocations();
-    void removeUnstableFeatures();
+    int getFeatureCandidates();
+    int getSubPixelLocations();
+    int removeUnstableFeatures();
     void computeFeatureAttributes();
 
-    SiftData& work();
+    DescriptorPtr work();
 
     SiftData& data() { return _data; }
 
@@ -39,9 +41,5 @@ private:
     double CORNER;
 };
 
-extern "C" {
-    void SIFTSHARED_EXPORT computeDescriptorsByName(std::string *name, Descriptor* out);
-    void SIFTSHARED_EXPORT computeDescriptorsByImage(CImage* image, Descriptor* out);
-}
 
 #endif // SIFT_HH

@@ -13,10 +13,26 @@ MessagesWidget::~MessagesWidget()
     delete ui;
 }
 
-void MessagesWidget::log(QString str, int value, int maximum)
+void MessagesWidget::log(Log::LogType type, int shift, QString str)
 {
-    QString newText = QString("%1\n%2").arg(ui->text->toPlainText()).arg(str);
-    ui->text->setPlainText(newText);
-    ui->progress->setValue(value);
-    ui->progress->setMaximum(maximum);
+    QString oldText = ui->text->toPlainText();
+    QString text = "\n";
+
+    switch(type)
+    {
+        case Log::Message: ; break;
+        case Log::Fail: text += "Проблема: "; break;
+        case Log::Error: text += "Ошибка: "; break;
+    }
+
+    for(int i = 0; i < shift; i++) text += "\t";
+    text += str;
+    ui->text->setPlainText(oldText + text);
 }
+
+void MessagesWidget::progress(int val, int max)
+{
+    ui->progress->setValue(val);
+    ui->progress->setMaximum(max);
+}
+

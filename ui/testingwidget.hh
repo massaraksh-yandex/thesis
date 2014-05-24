@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include "logging.hh"
-#include "noise.hh"
 
 namespace Ui {
 class TestingWidget;
@@ -14,10 +13,14 @@ class TestingWidget : public QWidget
     Q_OBJECT
 
     QStringList noises;
+    QList<QPair<ImageNoiseType, double>> _data;
 
 public:
     explicit TestingWidget(QWidget *parent = 0);
     ~TestingWidget();
+
+    QList<QPair<ImageNoiseType, double>> data() { return _data; }
+    QString path();
 
 private slots:
     void openFolder();
@@ -26,7 +29,7 @@ private slots:
     void startPressed();
 signals:
     void log(Log::LogType type, int shift, QString str);
-    void accepted(Noise::Noises);
+    void accepted();
 
 private:
     Ui::TestingWidget *ui;

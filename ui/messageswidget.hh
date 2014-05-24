@@ -5,7 +5,6 @@
 #include <QString>
 
 #include "logging.hh"
-
 namespace Ui {
 class MessagesWidget;
 }
@@ -20,6 +19,7 @@ public:
 
 public slots:
     void log(Log::LogType type, int shift, QString str);
+    void progress(int val, int max);
 
 private:
     Ui::MessagesWidget *ui;

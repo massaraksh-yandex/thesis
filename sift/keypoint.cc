@@ -15,7 +15,6 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
         for(int j = 0; j < 16; j++)
         {
             std::vector<Keypoint>& nb = point.neighbourhood;
-            nb.push_back(Keypoint());
             Keypoint kp(point.x-(16/2)+j, point.y-(16/2)+i, point.z, point.octave);
             if(!((kp.x <= 0) || (kp.y <= 0) ||
                 (kp.x >= DoG[point.octave][point.z].width()-1) ||

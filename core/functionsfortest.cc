@@ -1,4 +1,5 @@
 #include "functionsfortest.hh"
+#include "core.hh"
 
 #include "point_multiset.hpp"
 #include "bits/spatial_euclidian_neighbor.hpp"
@@ -25,14 +26,14 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
     return (double)compared / d.size();
 }
 
-CImagePtr computeNoiseImage(CImagePtr src, Noise::Type type)
+CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)
 {
-    CImagePtr im(new CImage(*im));
+    CImagePtr im(new CImage(*src));
 
-    switch(type.type)
+    switch(type.first)
     {
-    case Noise::Gaussian: Noise::gaussianNoise(*im, type.value); break;
-    case Noise::SaltAndPepper: Noise::saltAndPepperNoise(*im, type.value); break;
+    case GIN: gaussianImageNoise(*im, type.second); break;
+    case SAPIN: saltAndPepperNoise(*im, type.second); break;
     default:break;
     }
 

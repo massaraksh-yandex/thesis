@@ -3,10 +3,6 @@
 
 #include <QSharedPointer>
 #include "../CImg.h"
-#include "sift.hh"
-#include "noise.hh"
-
-typedef QSharedPointer<CImage> CImagePtr;
-typedef QSharedPointer<Descriptor> DescriptorPtr;
+#include "global.hh"
 
 #endif // GLOBAL_CORE_HH
