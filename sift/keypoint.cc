@@ -62,19 +62,27 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
 
 
         int size = descriptors[index].size();
-        double norm = 0.0;
-        for(int i = 0; i < size; i++)
-            norm += descriptors[index][i] * descriptors[index][i];
-        for(int i = 0; i < size; i++)
-        {
-            descriptors[index][i] /= norm;
-            if(descriptors[index][i] > 0.2)
-                descriptors[index][i] = 0.2;
-        }
-        norm = 0.0;
-        for(int i = 0; i < size; i++)
-            norm += descriptors[index][i] * descriptors[index][i];
-        for(int i = 0; i < size; i++)
-            descriptors[index][i] /= norm;
+//        double norm = 0.0;
+
+        Descriptor::value_type& line = descriptors[index];
+        auto accumSqr = [](double accum, double val) { return accum+val*val; };
+        double norm = std::accumulate(line.begin(), line.end(), 0.0, accumSqr);
+//        for(int i = 0; i < size; i++)
+//            norm += descriptors[index][i] * descriptors[index][i];
+
+        std::for_each(line.begin(), line.end(), [norm](double& a){ a /= norm; if(a > 0.2) a = 0.2; });
+//        for(int i = 0; i < size; i++)
+//        {
+//            descriptors[index][i] /= norm;
+//            if(descriptors[index][i] > 0.2)
+//                descriptors[index][i] = 0.2;
+//        }
+//        norm = 0.0;
+//        for(int i = 0; i < size; i++)
+//            norm += descriptors[index][i] * descriptors[index][i];
+        norm = std::accumulate(line.begin(), line.end(), 0.0, accumSqr);
+//        for(int i = 0; i < size; i++)
+//            descriptors[index][i] /= norm;
+        std::for_each(line.begin(), line.end(), [norm](double& a){ a /= norm; });
     }
 }
