@@ -15,10 +15,10 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
         for(int j = 0; j < 16; j++)
         {
             std::vector<Keypoint>& nb = point.neighbourhood;
-            Keypoint kp(point.x-(16/2)+j, point.y-(16/2)+i, point.z, point.octave);
-            if(!((kp.x <= 0) || (kp.y <= 0) ||
-                (kp.x >= DoG[point.octave][point.z].width()-1) ||
-                (kp.y >= DoG[point.octave][point.z].height()-1)))
+            Keypoint kp(point.X-(16/2)+j, point.Y-(16/2)+i, point.Bl, point.octave);
+            if(!((kp.X <= 0) || (kp.Y <= 0) ||
+                (kp.X >= DoG[point.octave][point.Bl].width()-1) ||
+                (kp.Y >= DoG[point.octave][point.Bl].height()-1)))
             {
                 nb.push_back(kp);
             }
@@ -29,13 +29,12 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
     //    -- angle(x,y)=atan((L(x,y+1)-L(x,y-1)) / (L(x+1,y)-L(x-1,y)));
     for(vector<Keypoint>::iterator n_it = point.neighbourhood.begin(); n_it != point.neighbourhood.end(); ++n_it)
     {
-        n_it->magnitude = sqrt(pow(DoG[n_it->octave][n_it->z](n_it->x+1,n_it->y) - DoG[n_it->octave][n_it->z](n_it->x-1,n_it->y), 2.0f)
-                                + pow(DoG[n_it->octave][n_it->z](n_it->x,n_it->y+1) - DoG[n_it->octave][n_it->z](n_it->x,n_it->y-1), 2.0f));
+        n_it->magnitude = sqrt(pow(DoG[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - DoG[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y), 2.0f)
+                                + pow(DoG[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - DoG[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1), 2.0f));
+
         // angle is in radians
-        n_it->angle = atan2((DoG[n_it->octave][n_it->z](n_it->x,n_it->y+1) - DoG[n_it->octave][n_it->z](n_it->x,n_it->y-1)),
-                            (DoG[n_it->octave][n_it->z](n_it->x+1,n_it->y) - DoG[n_it->octave][n_it->z](n_it->x-1,n_it->y)));
-        //n_it->angle = atan((DoG[n_it->octave][n_it->z](n_it->x,n_it->y+1) - DoG[n_it->octave][n_it->z](n_it->x,n_it->y-1)) /
-        //				   (DoG[n_it->octave][n_it->z](n_it->x+1,n_it->y) - DoG[n_it->octave][n_it->z](n_it->x-1,n_it->y)));
+        n_it->angle = atan2((DoG[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - DoG[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1)),
+                            (DoG[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - DoG[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y)));
     }
     for(vector<pair<double,double> >::iterator am_it = point.angmag.begin(); am_it != point.angmag.end(); ++am_it)
     {
@@ -51,7 +50,7 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
             while(n_it->angle <    0.0) n_it->angle = 360.0 - n_it->angle;
             while(n_it->angle >= 360.0) n_it->angle = n_it->angle - 360.0;
             //
-            hist[(n_it->x-point.x+8)/4][(n_it->y-point.y+8)/4][int(n_it->angle)/45] += n_it->magnitude * Math::Gaussian2D(n_it->x - point.x, n_it->y - point.y, 16/2);	// opet by to melo bejt posunuty subpixelove o 0.5px, takze by se spravne melo pricist 7.5
+            hist[(n_it->X-point.X+8)/4][(n_it->Y-point.Y+8)/4][int(n_it->angle)/45] += n_it->magnitude * Math::Gaussian2D(n_it->X - point.X, n_it->Y - point.Y, 16/2);	// opet by to melo bejt posunuty subpixelove o 0.5px, takze by se spravne melo pricist 7.5
         }
         // 4. ulozit 4x4x8 cisel do vektoru; lze exportovat treba do CSV,SQL,apod.
         index = descriptors.size();

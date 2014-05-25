@@ -16,9 +16,9 @@ double Gaussian2D(double x, double y, double s)
 // частичная 3д функция
 void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
-    int x = kp.x;
-    int y = kp.y;
-    int z = kp.z;
+    int x = kp.X;
+    int y = kp.Y;
+    int z = kp.Bl;
     diff(0,0) = double(space[z  ](x+1,y  ) - space[z  ](x-1,y  )) / 2.0;
     diff(1,0) = double(space[z  ](x  ,y+1) - space[z  ](x  ,y-1)) / 2.0;
     diff(2,0) = double(space[z+1](x  ,y  ) - space[z-1](x  ,y  )) / 2.0;
@@ -29,9 +29,9 @@ void H3x3(const CImageVec &space, Keypoint& kp, Matrix &our)
     // xx xy xz
     // xy yy yz
     // xz yz zz
-    int x = kp.x;
-    int y = kp.y;
-    int z = kp.z;
+    int x = kp.X;
+    int y = kp.Y;
+    int z = kp.Bl;
 
     our(0,0) = space[z  ](x+1,y  ) + space[z  ](x-1,y  ) - 2 * space[z](x,y); // xx
     our(1,1) = space[z  ](x  ,y+1) + space[z  ](x  ,y-1) - 2 * space[z](x,y); // yy

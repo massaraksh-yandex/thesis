@@ -20,7 +20,7 @@ bool compare(const SIFT::Feature& f, const Keypoint& k)
     double angle;		// feature direction (angle)
     int direction;		// feature direction (index of histogram bin)*/
 
-    if(f.x != k.x || f.y != k.y || f.z != k.z)
+    if(f.x != k.X || f.y != k.Y || f.z != k.Bl)
         return false;
     if(f.dx != k.dx || f.dy != k.dy || f.dz != k.dz)
         return false;

@@ -207,8 +207,8 @@ int Sift::clarifyKeypoints()
     for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
     {
         stable = false;
-        max_x = _data.dog[f_it->octave][f_it->z].width() - 2;
-        max_y = _data.dog[f_it->octave][f_it->z].height() - 2;
+        max_x = _data.dog[f_it->octave][f_it->Bl].width() - 2;
+        max_y = _data.dog[f_it->octave][f_it->Bl].height() - 2;
         max_z = _data.dog[f_it->octave].size() - 2;
         for(int it = 0; it < MaxIters; it++)
         {
@@ -219,11 +219,11 @@ int Sift::clarifyKeypoints()
                 break;	// stable feature
             }
             // else update position and try it again
-            f_it->x += double(f_it->dx >= 0.5);
-            f_it->y += double(f_it->dy >= 0.5);
-            f_it->z += double(f_it->dz >= 0.5);
+            f_it->X += double(f_it->dx >= 0.5);
+            f_it->Y += double(f_it->dy >= 0.5);
+            f_it->Bl += double(f_it->dz >= 0.5);
             // check for out-of-image location
-            if((f_it->x < 1) || (f_it->y < 1) || (f_it->z < 1) || (f_it->x > max_x) || (f_it->y > max_y) || (f_it->z > max_z))
+            if((f_it->X < 1) || (f_it->Y < 1) || (f_it->Bl < 1) || (f_it->X > max_x) || (f_it->Y > max_y) || (f_it->Bl > max_z))
             {
                 stable = false;
                 break;
@@ -252,7 +252,7 @@ int Sift::filterKeypoints()
         // pozn.: na zkusebnich obrazcich davaji obe verze totozne vysledky, coz je dobre, ale
         //        zatim to necham pixoleve, kdyz stejne subpixelovou informaci dal nepouzivam
         //   -- pixel version
-        contrast = _data.dog[f_it->octave][f_it->z](f_it->x,f_it->y);
+        contrast = _data.dog[f_it->octave][f_it->Bl](f_it->X,f_it->Y);
         if(fabs(contrast) < CONTRAST)
         {
             f_it = _data.points.erase(f_it);	// returns the following element
@@ -268,7 +268,7 @@ int Sift::filterKeypoints()
     for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // 2. the edge-like points check
-        Math::H2x2(_data.dog[f_it->octave][f_it->z], f_it->x, f_it->y, H);
+        Math::H2x2(_data.dog[f_it->octave][f_it->Bl], f_it->X, f_it->Y, H);
         tr = H(0,0) + H(1,1);
         det = Math::det(H);
         if((det < 0) || (((tr*tr)/det) > ((CORNER+1)*(CORNER+1)/CORNER)))
@@ -302,13 +302,13 @@ void Sift::finishKeypoints()
         {
             for(int j = 0; j < kernelSize; j++)
             {
-                Keypoint point( f_it->x - (kernelSize/2) + j,
-                                f_it->y - (kernelSize/2) + i,
-                                f_it->z, f_it->octave);
+                Keypoint point( f_it->X - (kernelSize/2) + j,
+                                f_it->Y - (kernelSize/2) + i,
+                                f_it->Bl, f_it->octave);
                 // kontrola rozmeru
-                bool correct = (point.x <= 0) || (point.y <= 0) ||
-                                (point.x >= _data.dog[f_it->octave][f_it->z].width()-1) ||
-                                (point.y >= _data.dog[f_it->octave][f_it->z].height()-1);
+                bool correct = (point.X <= 0) || (point.Y <= 0) ||
+                                (point.X >= _data.dog[f_it->octave][f_it->Bl].width()-1) ||
+                                (point.Y >= _data.dog[f_it->octave][f_it->Bl].height()-1);
                 if(!correct)
                     f_it->neighbourhood.push_back(point);
             }
@@ -318,13 +318,13 @@ void Sift::finishKeypoints()
         //    -- angle(x,y)=atan((L(x,y+1)-L(x,y-1)) / (L(x+1,y)-L(x-1,y)));
         for(vector<Keypoint>::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
         {
-            n_it->magnitude = sqrt(pow(_data.dog[n_it->octave][n_it->z](n_it->x+1,n_it->y) - _data.dog[n_it->octave][n_it->z](n_it->x-1,n_it->y), 2.0f)
-                                 + pow(_data.dog[n_it->octave][n_it->z](n_it->x,n_it->y+1) - _data.dog[n_it->octave][n_it->z](n_it->x,n_it->y-1), 2.0f));
+            n_it->magnitude = sqrt(pow(_data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - _data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y), 2.0f)
+                                 + pow(_data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - _data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1), 2.0f));
             // angle is in radians
-            n_it->angle = atan2((_data.dog[n_it->octave][n_it->z](n_it->x,n_it->y+1) - _data.dog[n_it->octave][n_it->z](n_it->x,n_it->y-1)),
-                                (_data.dog[n_it->octave][n_it->z](n_it->x+1,n_it->y) - _data.dog[n_it->octave][n_it->z](n_it->x-1,n_it->y)));
-            //n_it->angle = atan((data.dog[n_it->octave][n_it->z](n_it->x,n_it->y+1) - data.dog[n_it->octave][n_it->z](n_it->x,n_it->y-1)) /
-            //				   (data.dog[n_it->octave][n_it->z](n_it->x+1,n_it->y) - data.dog[n_it->octave][n_it->z](n_it->x-1,n_it->y)));
+            n_it->angle = atan2((_data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - _data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1)),
+                                (_data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - _data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y)));
+            //n_it->angle = atan((data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1)) /
+            //				   (data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y)));
         }
         // 3. nahazet do histogramu uhlu o 36 binech, tedy 1bin=10stupnu nebo PI/18rad
         //    -- magnituda binu se pocita jako suma pres body v binu: m(x,y)*Gauss(x,y,1.5*sigma)
@@ -332,7 +332,7 @@ void Sift::finishKeypoints()
         for(vector<Keypoint>::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
         {
             n_it->angle = 180 + (n_it->angle * 180.0 / Math::PI());	// rad2deg
-            hist[int(n_it->angle) / 10] += n_it->magnitude * Math::Gaussian2D(n_it->x - f_it->x, n_it->y - f_it->y, 1.5*sigma);
+            hist[int(n_it->angle) / 10] += n_it->magnitude * Math::Gaussian2D(n_it->X - f_it->X, n_it->Y - f_it->Y, 1.5*sigma);
         }
         // 4. uhel s nejvyssi magnitudou --> orientace featury! -- tato magnituda = 100%
         int max_i = 0;
