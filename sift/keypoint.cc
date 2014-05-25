@@ -36,29 +36,29 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
                             (DoG[kp.octave][kp.Bl](kp.X+1,kp.Y) - DoG[kp.octave][kp.Bl](kp.X-1,kp.Y)));
     }
 
-    for(vector<pair<double,double> >::iterator am_it = point.angmag.begin(); am_it != point.angmag.end(); ++am_it)
+    for(Keypoint::Histogram::value_type& am_it : point.angmag)//= point.angmag.begin(); am_it != point.angmag.end(); ++am_it)
     {
         // 3. sloucit body do okna 4x4 pres histogramy, ktere maji 8binu
         //    -- magnituda binu se pocita jako suma pres body v binu: m(x,y)*Gauss(x,y,sigma=window_size/2=16/2=8)
         //    -- uhly pocitat relativne k uhlu keypointu (pro kazdou orientaci jeden deskriptor)
         vector<vector<vector<double> > > hist(4, vector<vector<double> >(4, vector<double>(8, 0.0)));	// 4x4x8; [x,y,angle]
-        for(Keypoint& n_it : point.neighbourhood)
+        for(Keypoint& neib : point.neighbourhood)
         {
-            n_it.angle = 180.0 + (n_it.angle * 180.0 / Math::PI());
-            n_it.angle = am_it->first - n_it.angle;
+            neib.angle = 180.0 + (neib.angle * 180.0 / Math::PI());
+            neib.angle = am_it.first - neib.angle;
 
             // углы должны быть от 0 до 360 градусов
-            while(n_it.angle < 0.0)
-                n_it.angle = 360.0 - n_it.angle;
-            while(n_it.angle >= 360.0)
-                n_it.angle -= 360.0;
+            while(neib.angle < 0.0)
+                neib.angle = 360.0 - neib.angle;
+            while(neib.angle >= 360.0)
+                neib.angle -= 360.0;
 
-            int iX = (n_it.X-point.X+8)/4;
-            int iY = (n_it.Y-point.Y+8)/4;
-            int iZ = n_it.angle/45;
+            int iX = (neib.X-point.X+8)/4;
+            int iY = (neib.Y-point.Y+8)/4;
+            int iZ = neib.angle/45;
 
-            double gauss = Math::Gaussian2D(n_it.X - point.X, n_it.Y - point.Y, 16/2);
-            hist[iX][iY][iZ] += n_it.magnitude * gauss;
+            double gauss = Math::Gaussian2D(neib.X - point.X, neib.Y - point.Y, 16/2);
+            hist[iX][iY][iZ] += neib.magnitude * gauss;
         }
 
         descriptors.push_back(QList<double>());
