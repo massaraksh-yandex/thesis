@@ -31,9 +31,9 @@ public:
     SiftData& data() { return _data; }
 
 private:
-    bool isMin(const CImage &img, float px, int pos_x, int pos_y, bool dont_check_pos_xy);
-    bool isMax(const CImage &img, float px, int pos_x, int pos_y, bool dont_check_pos_xy);
-    bool getSubPixelExtrema(CImageVec &octave, Keypoint &feature);
+    bool minimumInLayer(const CImage &img, float px, int pos_x, int pos_y, bool dontCheckXY);
+    bool maximumInLayer(const CImage &img, float px, int pos_x, int pos_y, bool dont_check_pos_xy);
+    void getSubPixelExtrema(CImageVec &octave, Keypoint &feature);
     CImage normalize(const cimg_library::CImg<unsigned char> &img);
     void prepareSigmas();
     int getKernelSize(double sigma);

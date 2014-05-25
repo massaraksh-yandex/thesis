@@ -1,6 +1,7 @@
 #include <boost/numeric/ublas/lu.hpp>
 
 #include "sift_math.hh"
+#include "keypoint.hh"
 
 using namespace boost::numeric::ublas;
 
@@ -21,27 +22,36 @@ double Gaussian2D(double dx, double dy, double sigma)	// could be optimized byt 
 }
 
 // compute a partial derivative of a 3D function
-void diff3D(CImageVec &space, int x, int y, int z, Matrix &diff)
+void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
+    int x = kp.x;
+    int y = kp.y;
+    int z = kp.z;
     diff(0,0) = double(space[z  ](x+1,y  ) - space[z  ](x-1,y  )) / 2.0;
     diff(1,0) = double(space[z  ](x  ,y+1) - space[z  ](x  ,y-1)) / 2.0;
     diff(2,0) = double(space[z+1](x  ,y  ) - space[z-1](x  ,y  )) / 2.0;
 }
 
 // put together a 3x3 Hessian matrix
-void hessian3x3(const CImageVec &space, int x, int y, int z, Matrix &h_mat)
+void hessian3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat)
 {
-    //     (Dxx, Dxy, Dxz)
-    // H = (Dxy, Dyy, Dyz)
-    //     (Dxz, Dyz, Dzz)
-    // ===================
-    h_mat(0,0) = space[z  ](x+1,y  ) + space[z  ](x-1,y  ) - 2 * space[z](x,y);	// Dxx
-    h_mat(1,1) = space[z  ](x  ,y+1) + space[z  ](x  ,y-1) - 2 * space[z](x,y);	// Dyy
-    h_mat(2,2) = space[z+1](x  ,y  ) + space[z-1](x  ,y  ) - 2 * space[z](x,y);	// Dzz
-    //
-    h_mat(1,0) = h_mat(0,1) = space[z  ](x+1,y+1) + space[z  ](x-1,y-1) - space[z  ](x+1,y-1) - space[z  ](x-1,y+1);	// Dxy
-    h_mat(2,0) = h_mat(0,2) = space[z+1](x+1,y  ) + space[z-1](x-1,y  ) - space[z-1](x+1,y  ) - space[z+1](x-1,y  );	// Dxz
-    h_mat(2,1) = h_mat(1,2) = space[z+1](x  ,y+1) + space[z-1](x  ,y-1) - space[z-1](x  ,y+1) - space[z+1](x  ,y-1);	// Dyz
+    // xx xy xz
+    // xy yy yz
+    // xz yz zz
+    int x = kp.x;
+    int y = kp.y;
+    int z = kp.z;
+
+    h_mat(0,0) = space[z  ](x+1,y  ) + space[z  ](x-1,y  ) - 2 * space[z](x,y); // xx
+    h_mat(1,1) = space[z  ](x  ,y+1) + space[z  ](x  ,y-1) - 2 * space[z](x,y); // yy
+    h_mat(2,2) = space[z+1](x  ,y  ) + space[z-1](x  ,y  ) - 2 * space[z](x,y); // zz
+
+    h_mat(1,0) = h_mat(0,1)
+               = space[z](x+1,y+1)+space[z](x-1,y-1)-space[z](x+1,y-1)-space[z](x-1,y+1); // Dxy
+    h_mat(2,0) = h_mat(0,2)
+               = space[z+1](x+1,y)+space[z-1](x-1,y)-space[z-1](x+1,y)-space[z+1](x-1,y); // Dxz
+    h_mat(2,1) = h_mat(1,2)
+               = space[z+1](x,y+1)+space[z-1](x,y-1)-space[z-1](x,y+1)-space[z+1](x,y-1); // Dyz
 }
 
 // put together a 2x2 Hessian matrix

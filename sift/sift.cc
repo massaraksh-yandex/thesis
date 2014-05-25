@@ -9,63 +9,69 @@
 
 using namespace std;
 
-int Sift::getKernelSize(double sigma)	// this method was taken over from AIShack
+constexpr double epsilon = 0.001;
+
+int Sift::getKernelSize(double sigma)
 {
-    int MAX_KERNEL_SIZE = 20, i;
-    for (i = 0; i < MAX_KERNEL_SIZE; i++)
+    int maxIters = 20, i;
+    for (i = 0; i < maxIters; i++)
     {
         double top = i*i*-1;
-        if ( exp( top / (2.0*sigma*sigma)) < 0.001)
+        if ( exp( top / (2.0*sigma*sigma)) < epsilon)
             break;
     }
 
     return 2*i-1;
 }
 
-bool Sift::isMin(const CImage &img, float px, int pos_x, int pos_y, bool dont_check_pos_xy)
+bool Sift::minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
-    if(img(pos_x-1, pos_y-1) >= px) return false;
-    if(img(pos_x-1, pos_y  ) >= px) return false;
-    if(img(pos_x-1, pos_y+1) >= px) return false;
-    if(img(pos_x  , pos_y-1) >= px) return false;
-    if(img(pos_x  , pos_y  ) >= px) if(!dont_check_pos_xy) return false;
-    if(img(pos_x  , pos_y+1) >= px) return false;
-    if(img(pos_x+1, pos_y-1) >= px) return false;
-    if(img(pos_x+1, pos_y  ) >= px) return false;
-    if(img(pos_x+1, pos_y+1) >= px) return false;
+    if(img(x-1, y-1) >= pix) return false;
+    if(img(x-1, y  ) >= pix) return false;
+    if(img(x-1, y+1) >= pix) return false;
+    if(img(x  , y-1) >= pix) return false;
+    if(img(x  , y  ) >= pix) if(!dontCheckXY) return false;
+    if(img(x  , y+1) >= pix) return false;
+    if(img(x+1, y-1) >= pix) return false;
+    if(img(x+1, y  ) >= pix) return false;
+    if(img(x+1, y+1) >= pix) return false;
     return true;
 }
 
-bool Sift::isMax(const cimg_library::CImg<float> &img, float px, int pos_x, int pos_y, bool dont_check_pos_xy)
+bool Sift::maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
-    if(img(pos_x-1, pos_y-1) <= px) return false;
-    if(img(pos_x-1, pos_y  ) <= px) return false;
-    if(img(pos_x-1, pos_y+1) <= px) return false;
-    if(img(pos_x  , pos_y-1) <= px) return false;
-    if(img(pos_x  , pos_y  ) <= px) if((dont_check_pos_xy == false)) return false;
-    if(img(pos_x  , pos_y+1) <= px) return false;
-    if(img(pos_x+1, pos_y-1) <= px) return false;
-    if(img(pos_x+1, pos_y  ) <= px) return false;
-    if(img(pos_x+1, pos_y+1) <= px) return false;
+    if(img(x-1, y-1) <= pix) return false;
+    if(img(x-1, y  ) <= pix) return false;
+    if(img(x-1, y+1) <= pix) return false;
+    if(img(x  , y-1) <= pix) return false;
+    if(img(x  , y  ) <= pix) if(!dontCheckXY) return false;
+    if(img(x  , y+1) <= pix) return false;
+    if(img(x+1, y-1) <= pix) return false;
+    if(img(x+1, y  ) <= pix) return false;
+    if(img(x+1, y+1) <= pix) return false;
 
     return true;
 }
 
-bool Sift::getSubPixelExtrema(CImageVec &octave, Keypoint &feature)
+void Sift::getSubPixelExtrema(CImageVec &octave, Keypoint &keypoint)
 {
-    using namespace boost::numeric::ublas;
-    //
-    // compute dD
-    matrix<double> dD(3,1);	// [0] = dD/dx, [1] = dD/dy, [2] = dD/dz; D = pixel
-    Math::diff3D(octave, feature.x, feature.y, feature.z, dD);
-    // compute H = (d^2)D/d(x^2) ... second order derivative
-    matrix<double> H(3,3), H_1(3,3);	// H_1 = inverse of H
-    Math::hessian3x3(octave, feature.x, feature.y, feature.z, H);
-    // compute aX (approcimation of X - the subpixel position); aX = - (H^(-1)) * dD
-    if(!Math::inverse(H, H_1)) return false;
-    matrix<double> aX(3,1); aX = prod(H_1, dD);
-    feature.dx = -aX(0,0); feature.dy = -aX(1,0); feature.dz = -aX(2,0);
-    return true;
+    boost::numeric::ublas::matrix<double> D(3,1),
+                                          H(3,3),
+                                          HInverce(3,3);
+
+    Math::diff3D(octave, keypoint, D);
+    Math::hessian3x3(octave, keypoint, H);
+
+    if(!Math::inverse(H, HInverce))
+        return;
+
+    // апроксимация Х - субпиксельная позиция
+    boost::numeric::ublas::matrix<double> shift(3,1);
+    shift = boost::numeric::ublas::prod(HInverce, D);
+
+    keypoint.dx = -shift(0,0);
+    keypoint.dy = -shift(1,0);
+    keypoint.dz = -shift(2,0);
 }
 
 CImage Sift::normalize(const cimg_library::CImg<unsigned char> &img)
@@ -158,10 +164,10 @@ int Sift::getFeatureCandidates()
                     bool max = true;
                     bool min = true;
                     for(int k = -1; k < 2; k++)
-                        min = min && isMin(_data.dog[i][s+k], px, x, y, k == 0 );
+                        min = min && minimumInLayer(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     for(int k = -1; k < 2; k++)
-                        max = max && isMax(_data.dog[i][s+k], px, x, y, k == 0 );
+                        max = max && maximumInLayer(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     if(min || max)
                         _data.points.push_back(Keypoint(x, y, s, i));	// save the feature candidate

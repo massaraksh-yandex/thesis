@@ -5,6 +5,7 @@
 #include <map>
 
 #include "global.hh"
+#include "keypoint.hh"
 
 namespace Math
 {
@@ -13,8 +14,8 @@ namespace Math
 
     double sigma(int x, int y);
     double Gaussian2D(double dx, double dy, double sigma);
-    void diff3D(CImageVec &space, int x, int y, int z, Matrix &diff);
-    void hessian3x3(const CImageVec &space, int x, int y, int z, Matrix &h_mat);
+    void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff);
+    void hessian3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat);
     void hessian2x2(const CImage &space, int x, int y, Matrix &h_mat);
     bool inverse(Matrix &input, Matrix &inverse);
     double determinant(Matrix &m);
