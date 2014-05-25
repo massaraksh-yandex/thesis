@@ -6,6 +6,7 @@
 struct Keypoint
 {
     typedef std::vector<Keypoint> Cont;
+    typedef std::vector<std::pair<double,double> > Histogram;
     typedef Cont::iterator iterator;
 
     double X; // колонка

@@ -53,36 +53,19 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
             hist[(n_it.X-point.X+8)/4][(n_it.Y-point.Y+8)/4][int(n_it.angle)/45] += n_it.magnitude * Math::Gaussian2D(n_it.X - point.X, n_it.Y - point.Y, 16/2);
         }
 
-        index = descriptors.size();
         descriptors.push_back(QList<double>());
-        for(size_t xi = 0, xim = hist.size(); xi < xim; xi++)
-            for(size_t yi = 0, yim = hist[xi].size(); yi < yim; yi++)
-                for(size_t ai = 0, aim = hist[xi][yi].size(); ai < aim; ai++)
-                    descriptors[index].push_back(hist[xi][yi][ai]);
+        Descriptor::value_type& line = descriptors.back();
 
+        for(int x = 0; x < hist.size(); x++)
+            for(int y = 0; y < hist[x].size(); y++)
+                for(int z = 0; z < hist[x][y].size(); z++)
+                    line.push_back(hist[x][y][z]);
 
-        int size = descriptors[index].size();
-//        double norm = 0.0;
-
-        Descriptor::value_type& line = descriptors[index];
         auto accumSqr = [](double accum, double val) { return accum+val*val; };
         double norm = std::accumulate(line.begin(), line.end(), 0.0, accumSqr);
-//        for(int i = 0; i < size; i++)
-//            norm += descriptors[index][i] * descriptors[index][i];
 
         std::for_each(line.begin(), line.end(), [norm](double& a){ a /= norm; if(a > 0.2) a = 0.2; });
-//        for(int i = 0; i < size; i++)
-//        {
-//            descriptors[index][i] /= norm;
-//            if(descriptors[index][i] > 0.2)
-//                descriptors[index][i] = 0.2;
-//        }
-//        norm = 0.0;
-//        for(int i = 0; i < size; i++)
-//            norm += descriptors[index][i] * descriptors[index][i];
         norm = std::accumulate(line.begin(), line.end(), 0.0, accumSqr);
-//        for(int i = 0; i < size; i++)
-//            descriptors[index][i] /= norm;
         std::for_each(line.begin(), line.end(), [norm](double& a){ a /= norm; });
     }
 }
