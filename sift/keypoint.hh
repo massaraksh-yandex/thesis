@@ -9,6 +9,10 @@ struct Keypoint
     typedef std::vector<std::pair<double,double> > Histogram;
     typedef Cont::iterator iterator;
 
+    typedef std::vector<double> VectorDouble;
+    typedef std::vector<VectorDouble> MatrixDouble;
+    typedef std::vector<MatrixDouble> D3Histogram;
+
     double X; // колонка
     double Y; // ряд
     double Bl; // блур
@@ -24,7 +28,7 @@ struct Keypoint
     double magnitude;
     double angle;
 
-    std::vector<std::pair<double,double> > angmag; // гистограмма
+    Histogram angmag; // гистограмма
     int direction; // направление в гистограмме
 
 

@@ -199,21 +199,21 @@ int Sift::clarifyKeypoints()
 {
     const int MaxIters = 5;
 
-    bool stable;
-    double max_x, max_y, max_z;
     int y = 0;
     for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
     {
-        stable = false;
-        max_x = _data.dog[f_it->octave][f_it->Bl].width() - 2;
-        max_y = _data.dog[f_it->octave][f_it->Bl].height() - 2;
-        max_z = _data.dog[f_it->octave].size() - 2;
+        CImage& img = _data.dog[f_it->octave][f_it->Bl];
+//        CImageVec
+        double maxX = img.width() - 2;
+        double maxY = img.height() - 2;
+        double maxZ = _data.dog[f_it->octave].size() - 2;
+        bool isStable = false;
         for(int it = 0; it < MaxIters; it++)
         {
             subpixelExtrema(_data.dog[f_it->octave], *f_it);
             if((f_it->dx < 0.5) && (f_it->dy < 0.5) && (f_it->dz < 0.5))
             {
-                stable = true;
+                isStable = true;
                 break;
             }
             // else update position and try it again
@@ -221,13 +221,13 @@ int Sift::clarifyKeypoints()
             f_it->Y += double(f_it->dy >= 0.5);
             f_it->Bl += double(f_it->dz >= 0.5);
             // check for out-of-image location
-            if((f_it->X < 1) || (f_it->Y < 1) || (f_it->Bl < 1) || (f_it->X > max_x) || (f_it->Y > max_y) || (f_it->Bl > max_z))
+            if((f_it->X < 1) || (f_it->Y < 1) || (f_it->Bl < 1) || (f_it->X > maxX) || (f_it->Y > maxY) || (f_it->Bl > maxZ))
             {
-                stable = false;
+                isStable = false;
                 break;
             }
         }
-        if(!stable)	// unstable feature
+        if(!isStable)	// unstable feature
         {
             f_it = _data.points.erase(f_it);
             continue;
