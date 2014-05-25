@@ -15,12 +15,14 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
     {
         for(int j = 0; j < 16; j++)
         {
-            Keypoint kp(point.X-(16/2)+j, point.Y-(16/2)+i, point.Bl, point.octave);
-            if(!((kp.X <= 0) || (kp.Y <= 0) ||
-                (kp.X >= DoG[point.octave][point.Bl].width()-1) ||
-                (kp.Y >= DoG[point.octave][point.Bl].height()-1)))
+            int x = point.X-(16/2)+j;
+            int y = point.Y-(16/2)+i;
+
+            if(!((x <= 0) || (y <= 0) ||
+                (x >= DoG[point.octave][point.Bl].width()-1) ||
+                (y >= DoG[point.octave][point.Bl].height()-1)))
             {
-                point.neighbourhood.push_back(kp);
+                point.neighbourhood.push_back(Keypoint(x, y, point.Bl, point.octave));
             }
         }
     }
