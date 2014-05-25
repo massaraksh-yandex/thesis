@@ -60,7 +60,7 @@ void Sift::getSubPixelExtrema(CImageVec &octave, Keypoint &keypoint)
                                           HInverce(3,3);
 
     Math::diff3D(octave, keypoint, D);
-    Math::hessian3x3(octave, keypoint, H);
+    Math::H3x3(octave, keypoint, H);
 
     if(!Math::inverse(H, HInverce))
         return;
@@ -255,7 +255,7 @@ int Sift::removeUnstableFeatures()
         // 2. the edge-like points check
         Math::hessian2x2(_data.dog[f_it->octave][f_it->z], f_it->x, f_it->y, H);
         tr = H(0,0) + H(1,1);
-        det = Math::determinant(H);
+        det = Math::det(H);
         if((det < 0) || (((tr*tr)/det) > ((CORNER+1)*(CORNER+1)/CORNER)))
         {
             f_it = _data.points.erase(f_it);	// returns the following element

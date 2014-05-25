@@ -6,7 +6,7 @@
 using namespace boost::numeric::ublas;
 
 namespace Math {
-int determinant_sign(const boost::numeric::ublas::permutation_matrix<std::size_t> &pm)
+int determinant_sign(const boost::numeric::ublas::permutation_matrix<int> &pm)
 {	// This was taken from http://www.anderswallin.net/2010/05/matrix-determinant-with-boostublas/
     int pm_sign = 1;
     size_t size = pm.size();
@@ -33,7 +33,7 @@ void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
 }
 
 // put together a 3x3 Hessian matrix
-void hessian3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat)
+void H3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat)
 {
     // xx xy xz
     // xy yy yz
@@ -87,34 +87,33 @@ bool inverse(Matrix &input, Matrix &inverse)
     return true;
 }
 
-double determinant(Matrix &m)
+double det(Matrix &m)
 {
-    double det;
     if((m.size1() == 2) && (m.size2() == 2))
-    {	// cross-rule
-        det = m(0,0) * m(1,1) - m(0,1) * m(1,0);
+    {
+        return m(0,0)*m(1,1)-m(0,1)*m(1,0);
     }
     else
-    {	// This was taken from http://www.anderswallin.net/2010/05/matrix-determinant-with-boostublas/
-        boost::numeric::ublas::permutation_matrix<std::size_t> pm(m.size1());
-        det = 1.0;
+    {
+        boost::numeric::ublas::permutation_matrix<int> pm(m.size1());
         if(boost::numeric::ublas::lu_factorize(m,pm))
-            det = 0.0;
+        {
+            return 0.0;
+        }
         else
         {
-            for(int i = 0, im = m.size1(); i < im; i++)
-                det *= m(i,i); // multiply by elements on diagonal
-            det = det * determinant_sign(pm);
+            double det = 1.0;
+            for(int i = 0; i < m.size1(); i++)
+                det *= m(i,i);
+            return det * determinant_sign(pm);
         }
     }
-    return det;
 }
 
 double sigma(int x, int y)
 {
-    static double sigmas[4][5] = 	// 4-octaves,5-blurs
-    {	// 1.radek jsem rozepsal, aby bylo videt, kde se ty cisla v dalsich radcich vzaly (ale i ty jsou trochu rozepsany, aby byl videt nasobek mocniny dvou)
-        //{ 1.0*base*0.5, 1.0*base*base*0.5, 1.0*base*base*base*0.5, 1.0*base*base*base*base*0.5, 1.0*base*base*base*base*base*0.5 },
+    static double sigmas[4][5] =
+    {
         { 1.0*base()*0.5, 1.0*1.0, 1.0*base(), 1.0*2.0, 1.0*base()*2.0 },
         { 2.0*base()*0.5, 2.0*1.0, 2.0*base(), 2.0*2.0, 2.0*base()*2.0 },
         { 4.0*base()*0.5, 4.0*1.0, 4.0*base(), 4.0*2.0, 4.0*base()*2.0 },

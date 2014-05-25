@@ -15,10 +15,10 @@ namespace Math
     double sigma(int x, int y);
     double Gaussian2D(double dx, double dy, double sigma);
     void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff);
-    void hessian3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat);
+    void H3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat);
     void hessian2x2(const CImage &space, int x, int y, Matrix &h_mat);
     bool inverse(Matrix &input, Matrix &inverse);
-    double determinant(Matrix &m);
+    double det(Matrix &m);
 }
 
 #endif	// _MATH_H_
