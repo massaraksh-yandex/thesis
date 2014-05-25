@@ -7,7 +7,7 @@
 struct SiftData
 {
     CImageDoG dog;
-    Keypoints points;
+    Keypoint::Cont points;
 };
 
 #endif // SIFTDATA_HH

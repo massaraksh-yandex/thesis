@@ -139,19 +139,17 @@ void Sift::buildPyramidAndDoG()
 {
     CImageDoG pyramid;
 
-    CImage src = normalize(img).blur(0.5);
+    QVector<CImage> images; images.reserve(4);
 
-    CImage doubleImage  = src        .get_resize(-200, -200, -100, -100, 1).blur(1.0);
-    CImage originImage  = doubleImage.get_resize( -50,  -50, -100, -100, 1);
-    CImage halfImage    = originImage.get_resize( -50,  -50, -100, -100, 1);
-    CImage quarterImage = halfImage  .get_resize( -50,  -50, -100, -100, 1);
-
-    CImage* images[4] = { &doubleImage, &originImage, &halfImage, &quarterImage };
+    images.append(normalize(img).blur(0.5).get_resize(-200, -200, -100, -100, 1).blur(1.0));
+    images.append(images[0].get_resize( -50,  -50, -100, -100, 1));
+    images.append(images[1].get_resize( -50,  -50, -100, -100, 1));
+    images.append(images[2].get_resize( -50,  -50, -100, -100, 1));
 
     for(int i = 0; i < 4; i++)
     {
-        pyramid.push_back(vector<cimg_library::CImg<float> >());
-        pyramid[i].push_back(*(images[i]));
+        pyramid.push_back(CImageVec());
+        pyramid[i].push_back(images[i]);
         double sigma = Math::base();
         for(int s = 1; s < 5; s++)
         {
@@ -204,7 +202,7 @@ int Sift::clarifyKeypoints()
     bool stable;
     double max_x, max_y, max_z;
     int y = 0;
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
     {
         stable = false;
         max_x = _data.dog[f_it->octave][f_it->Bl].width() - 2;
@@ -216,7 +214,7 @@ int Sift::clarifyKeypoints()
             if((f_it->dx < 0.5) && (f_it->dy < 0.5) && (f_it->dz < 0.5))
             {
                 stable = true;
-                break;	// stable feature
+                break;
             }
             // else update position and try it again
             f_it->X += double(f_it->dx >= 0.5);
@@ -237,9 +235,6 @@ int Sift::clarifyKeypoints()
         ++f_it;
     }
     return _data.points.size();
-#ifdef _DEBUG
-    cout << '\t' << data.points.size() << " local extremas remain after the subpixel localization step." << endl;
-#endif	// _DEBUG
 }
 
 int Sift::filterKeypoints()
@@ -247,7 +242,7 @@ int Sift::filterKeypoints()
     // remove data.points with low contrast or points that lie on an edge
     boost::numeric::ublas::matrix<double> H(2,2);
     double contrast, tr, det;
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // pozn.: na zkusebnich obrazcich davaji obe verze totozne vysledky, coz je dobre, ale
         //        zatim to necham pixoleve, kdyz stejne subpixelovou informaci dal nepouzivam
@@ -261,11 +256,8 @@ int Sift::filterKeypoints()
         // the following element
         ++f_it;
     }
-#ifdef _DEBUG
-    cout << '\t' << data.points.size() << " local extremas remain after the low contrast elimination step." << endl;
-#endif	// _DEBUG
     int y = _data.points.size();
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // 2. the edge-like points check
         Math::H2x2(_data.dog[f_it->octave][f_it->Bl], f_it->X, f_it->Y, H);
@@ -281,16 +273,13 @@ int Sift::filterKeypoints()
     }
 
     return _data.points.size();
-#ifdef _DEBUG
-    cout << '\t' << data.points.size() << " local extremas remain after the edgy points elimination step." << endl;
-#endif	// _DEBUG
 }
 
 void Sift::finishKeypoints()
 {
     int kernelSize;
     double sigma;
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
     {
         f_it->neighbourhood.clear();
         sigma = Math::sigma(f_it->octave, 0);
@@ -316,7 +305,7 @@ void Sift::finishKeypoints()
         // 2. pro kazdy bod okenka spocitat magnitudu a uhel
         //    -- m(x,y)=sqrt(((L(x+1,y)-L(x-1,y))^2 + (L(x,y+1)-L(x,y-1))^2));
         //    -- angle(x,y)=atan((L(x,y+1)-L(x,y-1)) / (L(x+1,y)-L(x-1,y)));
-        for(vector<Keypoint>::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
+        for(Keypoint::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
         {
             n_it->magnitude = sqrt(pow(_data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - _data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y), 2.0f)
                                  + pow(_data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - _data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1), 2.0f));
@@ -329,7 +318,7 @@ void Sift::finishKeypoints()
         // 3. nahazet do histogramu uhlu o 36 binech, tedy 1bin=10stupnu nebo PI/18rad
         //    -- magnituda binu se pocita jako suma pres body v binu: m(x,y)*Gauss(x,y,1.5*sigma)
         vector<double> hist(36, 0.0);
-        for(vector<Keypoint>::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
+        for(Keypoint::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
         {
             n_it->angle = 180 + (n_it->angle * 180.0 / Math::PI());	// rad2deg
             hist[int(n_it->angle) / 10] += n_it->magnitude * Math::Gaussian2D(n_it->X - f_it->X, n_it->Y - f_it->Y, 1.5*sigma);
