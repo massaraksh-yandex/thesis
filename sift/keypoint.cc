@@ -48,9 +48,17 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
             n_it.angle = am_it->first - n_it.angle;
 
             // углы должны быть от 0 до 360 градусов
-            while(n_it.angle <    0.0) n_it.angle = 360.0 - n_it.angle;
-            while(n_it.angle >= 360.0) n_it.angle = n_it.angle - 360.0;
-            hist[(n_it.X-point.X+8)/4][(n_it.Y-point.Y+8)/4][int(n_it.angle)/45] += n_it.magnitude * Math::Gaussian2D(n_it.X - point.X, n_it.Y - point.Y, 16/2);
+            while(n_it.angle < 0.0)
+                n_it.angle = 360.0 - n_it.angle;
+            while(n_it.angle >= 360.0)
+                n_it.angle -= 360.0;
+
+            int iX = (n_it.X-point.X+8)/4;
+            int iY = (n_it.Y-point.Y+8)/4;
+            int iZ = n_it.angle/45;
+
+            double gauss = Math::Gaussian2D(n_it.X - point.X, n_it.Y - point.Y, 16/2);
+            hist[iX][iY][iZ] += n_it.magnitude * gauss;
         }
 
         descriptors.push_back(QList<double>());
