@@ -69,15 +69,6 @@ class Sift_testTest : public QObject
 
         QVERIFY(sift->data().points.size() == features.size());
 
-        for(int yy = 0; yy <features.size(); yy++)
-        {
-           if(!compare(features[yy], sift->data().points[yy]))
-           {
-               int tt = 4;
-               compare(features[yy], sift->data().points[yy]);
-           }
-        }
-
         aa = sift->filterKeypoints();
         bb = SIFT::step5_removeUnstableFeatures(DoG, features);
 
@@ -89,9 +80,9 @@ class Sift_testTest : public QObject
 
         DescriptorPtr ptr(new Descriptor());
         auto dd = sift->data();
-        for(int rr = 0; rr < dd.points.size(); rr++)
+        for(Keypoint& kp : dd.points)
         {
-            buildDescriptor(dd.points[rr], dd.dog, *ptr);
+            buildDescriptor(kp, dd.dog, *ptr);
         }
 
         for(int rr = 0; rr < features.size(); rr++)

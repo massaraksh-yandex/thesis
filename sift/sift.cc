@@ -9,20 +9,6 @@
 
 using namespace std;
 
-constexpr double epsilon = 0.001;
-
-int Sift::getKernelSize(double sigma)
-{
-    int maxIters = 20, i;
-    for (i = 0; i < maxIters; i++)
-    {
-        double top = i*i*-1;
-        if ( exp( top / (2.0*sigma*sigma)) < epsilon)
-            break;
-    }
-
-    return 2*i-1;
-}
 
 bool Sift::minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
@@ -84,7 +70,7 @@ void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
                                           H(3,3),
                                           HInverce(3,3);
 
-    Math::diff3D(octave, keypoint, D);
+    Math::diff3(octave, keypoint, D);
     Math::H3x3(octave, keypoint, H);
 
     if(!Math::inverse(H, HInverce))
@@ -252,97 +238,90 @@ int Sift::filterKeypoints()
     boost::numeric::ublas::matrix<double> H(2,2);
     double contrast, tr, det;
     Keypoint::Cont nArray;
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); f_it++)
     {
         contrast = _data.dog[f_it->octave][f_it->Bl](f_it->X,f_it->Y);
-        if(fabs(contrast) < CONTRAST)
-        {
-            f_it = _data.points.erase(f_it);	// returns the following element
-            continue;
-        }
-        // the following element
-        ++f_it;
+        if(qAbs(contrast) >= CONTRAST)
+            nArray.push_back(*f_it);
     }
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
+    _data.points.swap(nArray);
+    nArray.clear();
+
+    // удаляем на рёбрах
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
     {
-        // 2. the edge-like points check
         Math::H2x2(_data.dog[f_it->octave][f_it->Bl], f_it->X, f_it->Y, H);
         tr = H(0,0) + H(1,1);
         det = Math::det(H);
-        if((det < 0) || (((tr*tr)/det) > ((CORNER+1)*(CORNER+1)/CORNER)))
-        {
-            f_it = _data.points.erase(f_it);	// returns the following element
-            continue;
-        }
-        // the following element
-        ++f_it;
+
+        double value = (tr*tr)/det;
+        double corner = (CORNER+1)*(CORNER+1)/CORNER;
+        if((det >= 0) && (value <= corner))
+            nArray.push_back(*f_it);
     }
+    _data.points.swap(nArray);
 
     return _data.points.size();
 }
 
 void Sift::finishKeypoints()
 {
-    int kernelSize;
-    double sigma;
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
+    for(Keypoint::Cont::value_type& point : _data.points)
     {
-        f_it->neighbourhood.clear();
-        sigma = Math::sigma(f_it->octave, 0);
-        kernelSize = getKernelSize(sigma);
-        // 1. vyriznout okenko o velikosti kernelu pro Gaussian 1.5*sigma
-        //    -- body, u kterych by se okenko neveslo do obrazku zahodit
-        //    -- sigma je zakladni hodnota sigmy pro dany scale
+        point.neighbourhood.clear();
+        double sigma = Math::sigma(point.octave, 0);
+        int kernelSize = Math::kernelSize(sigma);
+
         for(int i = 0; i < kernelSize; i++)
         {
             for(int j = 0; j < kernelSize; j++)
             {
-                Keypoint point( f_it->X - (kernelSize/2) + j,
-                                f_it->Y - (kernelSize/2) + i,
-                                f_it->Bl, f_it->octave);
-                // kontrola rozmeru
-                bool correct = (point.X <= 0) || (point.Y <= 0) ||
-                                (point.X >= _data.dog[f_it->octave][f_it->Bl].width()-1) ||
-                                (point.Y >= _data.dog[f_it->octave][f_it->Bl].height()-1);
+                int x = point.X - (kernelSize/2) + j;
+                int y = point.Y - (kernelSize/2) + i;
+
+                CImage& img = _data.dog[point.octave][point.Bl];
+
+                bool correct = (x <= 0) || (y <= 0) ||
+                        (x >= img.width()-1) || (y >= img.height()-1);
                 if(!correct)
-                    f_it->neighbourhood.push_back(point);
+                    point.neighbourhood.push_back(Keypoint(x, y, point.Bl, point.octave));
             }
         }
-        // 2. pro kazdy bod okenka spocitat magnitudu a uhel
-        //    -- m(x,y)=sqrt(((L(x+1,y)-L(x-1,y))^2 + (L(x,y+1)-L(x,y-1))^2));
-        //    -- angle(x,y)=atan((L(x,y+1)-L(x,y-1)) / (L(x+1,y)-L(x-1,y)));
-        for(Keypoint::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
+
+        // считаем магнитуды и углы для точек окна
+        for(Keypoint::iterator n_it = point.neighbourhood.begin(); n_it != point.neighbourhood.end(); ++n_it)
         {
-            n_it->magnitude = sqrt(pow(_data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - _data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y), 2.0f)
-                                 + pow(_data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - _data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1), 2.0f));
-            // angle is in radians
-            n_it->angle = atan2((_data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - _data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1)),
-                                (_data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - _data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y)));
-            //n_it->angle = atan((data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y+1) - data.dog[n_it->octave][n_it->Bl](n_it->X,n_it->Y-1)) /
-            //				   (data.dog[n_it->octave][n_it->Bl](n_it->X+1,n_it->Y) - data.dog[n_it->octave][n_it->Bl](n_it->X-1,n_it->Y)));
+            CImage& img = _data.dog[n_it->octave][n_it->Bl];
+
+            n_it->magnitude = sqrt(pow(img(n_it->X+1,n_it->Y)   - img(n_it->X-1,n_it->Y),   2.0f)
+                                 + pow(img(n_it->X,  n_it->Y+1) - img(n_it->X,  n_it->Y-1), 2.0f));
+
+            n_it->angle = atan2((img(n_it->X,  n_it->Y+1) - img(n_it->X,  n_it->Y-1)),
+                                (img(n_it->X+1,n_it->Y)   - img(n_it->X-1,n_it->Y)));
         }
-        // 3. nahazet do histogramu uhlu o 36 binech, tedy 1bin=10stupnu nebo PI/18rad
-        //    -- magnituda binu se pocita jako suma pres body v binu: m(x,y)*Gauss(x,y,1.5*sigma)
-        vector<double> hist(36, 0.0);
-        for(Keypoint::iterator n_it = f_it->neighbourhood.begin(); n_it != f_it->neighbourhood.end(); ++n_it)
+
+        // строим гистограмму с 36 бинами
+        Keypoint::VectorDouble hist(36, 0.0);
+        for(Keypoint::iterator n_it = point.neighbourhood.begin(); n_it != point.neighbourhood.end(); ++n_it)
         {
-            n_it->angle = 180 + (n_it->angle * 180.0 / Math::PI());	// rad2deg
-            hist[int(n_it->angle) / 10] += n_it->magnitude * Math::Gaussian2D(n_it->X - f_it->X, n_it->Y - f_it->Y, 1.5*sigma);
+            n_it->angle = 180 + (n_it->angle * 180.0 / Math::PI());	// градусы
+            int indX = n_it->angle / 10;
+
+            double x = n_it->X - point.X;
+            double y = n_it->Y - point.Y;
+            hist[indX] += n_it->magnitude * Math::Gaussian(x, y, 1.5*sigma);
         }
-        // 4. uhel s nejvyssi magnitudou --> orientace featury! -- tato magnituda = 100%
-        int max_i = 0;
-        for(size_t i = 1, im = hist.size(); i < im; ++i)
-        {
-            if(hist[max_i] < hist[i])
-                max_i = i;
-        }
-        f_it->angmag.push_back(std::make_pair(max_i*10, hist[max_i]));	// max_i*10 = uhel; max_i je z intervalu 0-35;nasobek 10ti to prevede na stupne 0-350
-        //    -- kazda dalsi magnituda dosahujici alespon 80% --> dalsi featura! (stejny bod, jina magnituda a uhel)
-        double threshold = hist[max_i] * 0.8;
-        for(size_t i = 0, im = hist.size(); i < im; ++i)
+
+        // максимальный бин
+        int max_i = std::max_element(hist.begin()++, hist.end()) - hist.begin();
+        point.angmag.push_back(std::make_pair(max_i*10, hist[max_i]));	// направление точки
+
+        // дополнительные направления
+        double threshold = hist[max_i]*0.8;
+        for(int i = 0, im = hist.size(); i < im; ++i)
         {
             if(hist[i] >= threshold)
-                f_it->angmag.push_back(std::make_pair(i*10,hist[i]));	// prevod z indexu na stupne stejne jako vyse s max_i
+                point.angmag.push_back(std::make_pair(i*10,hist[i]));	// дополнительные направления
         }
     }
 }

@@ -16,16 +16,6 @@
 typedef spatial::point_multiset<128, QList<double> > KDTree;
 typedef QSharedPointer<KDTree > KDTreePtr;
 
-DescriptorPtr computeDescriptor(CImagePtr img)
-{
-    DescriptorPtr out;
-
-    Sift* sift = new Sift(img, 0);
-    out = sift->work();
-
-    return out;
-}
-
 DescriptorId Core::generateId() const
 {
     static DescriptorId rr = 0;

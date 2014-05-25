@@ -21,7 +21,6 @@ class MainWindow : public QWidget
 {
     Q_OBJECT
 
-    bool _busy;
 public:
     explicit MainWindow(Core* core, QWidget *parent = 0);
     ~MainWindow();
@@ -40,6 +39,8 @@ private:
     DescriptorWidget* descriptorWidget;
     ComparingWidget* comparingWidget;
     TestingWidget* testingWidget;
+
+    bool _busy;
 };
 
 #endif // MAINWINDOW_HH

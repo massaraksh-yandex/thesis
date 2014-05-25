@@ -37,7 +37,7 @@ private:
     void subpixelExtrema(CImageVec &octave, Keypoint &feature);
     CImage normalize(const cimg_library::CImg<unsigned char> &img);
     void prepareSigmas();
-    int getKernelSize(double sigma);
+    int kernelSize(double sigma);
 
     double CONTRAST;
     double CORNER;

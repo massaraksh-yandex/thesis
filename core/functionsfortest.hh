@@ -10,9 +10,10 @@
 #include "global_core.hh"
 #include "logging.hh"
 
-typedef spatial::point_multiset<128, QList<double> > KDTree;
-typedef QSharedPointer<KDTree > KDTreePtr;
+typedef spatial::point_multiset<128, QList<double>> KDTree;
+typedef QSharedPointer<KDTree> KDTreePtr;
 
+DescriptorPtr computeDescriptor(CImagePtr img);
 double compareDescriptors(DescriptorPtr src, KDTreePtr tree);
 CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type);
 KDTreePtr buildKDTrees(DescriptorPtr d);

@@ -61,7 +61,7 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
             int iY = (neib.Y-point.Y+8)/4;
             int iZ = neib.angle/45;
 
-            double gauss = Math::Gaussian2D(neib.X - point.X, neib.Y - point.Y, 16/2);
+            double gauss = Math::Gaussian(neib.X - point.X, neib.Y - point.Y, 16/2);
             hist[iX][iY][iZ] += neib.magnitude * gauss;
         }
 

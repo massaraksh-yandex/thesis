@@ -5,6 +5,16 @@
 #include "point_multiset.hpp"
 #include "bits/spatial_euclidian_neighbor.hpp"
 
+DescriptorPtr computeDescriptor(CImagePtr img)
+{
+    DescriptorPtr out;
+
+    Sift* sift = new Sift(img, 0);
+    out = sift->work();
+
+    return out;
+}
+
 double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
 {
     KDTree& tr = *tree.data();

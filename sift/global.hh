@@ -3,6 +3,7 @@
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <vector>
+#include <list>
 #include <QList>
 #include <QSharedPointer>
 #include "../CImg.h"

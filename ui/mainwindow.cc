@@ -27,12 +27,12 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(testingWidget, SIGNAL(accepted()), SLOT(testAccepted()));
 
     connect(ui->toolBox, SIGNAL(currentChanged(int)), SLOT(toolBoxClicked(int)));
-    toolBoxClicked(0);
 
     connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
+    resize(440, 480);
 }
 
 MainWindow::~MainWindow()

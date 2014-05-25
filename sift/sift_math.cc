@@ -6,15 +6,29 @@
 using namespace boost::numeric::ublas;
 
 namespace Math {
-double Gaussian2D(double x, double y, double s)
+double Gaussian(double x, double y, double s)
 {
     double pi = (2*PI()*s*s);
     double ex = exp(-(x*x+y*y)/(2.0*s*s));
     return 1.0/pi*ex;
 }
 
+
+int kernelSize(double sigma)
+{
+    int maxIters = 20, i;
+    for (i = 0; i < maxIters; i++)
+    {
+        double top = i*i*-1;
+        if ( exp( top / (2.0*sigma*sigma)) < epsilon())
+            break;
+    }
+
+    return 2*i-1;
+}
+
 // частичная 3д функция
-void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
+void diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
     int x = kp.X;
     int y = kp.Y;
