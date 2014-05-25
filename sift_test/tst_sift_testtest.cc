@@ -52,7 +52,7 @@ class Sift_testTest : public QObject
         sift->load(name);
         img.load(name.toStdString().c_str());
 
-        sift->buildPyramid();
+        sift->buildPyramidAndDoG();
         SIFT::step1_buildPyramid(img, pyramid);
         SIFT::step2_getDoG(pyramid, DoG);
 
@@ -60,12 +60,12 @@ class Sift_testTest : public QObject
         QVERIFY(sift->data().dog.size() == DoG.size());
 
         int aa = SIFT::step3_getFeatureCandidates(DoG, features);
-        int bb = sift->getFeatureCandidates();
+        int bb = sift->computeKeypoints();
         QVERIFY2(aa == bb, "getFeatureCandidates");
 
 
         QVERIFY2(SIFT::step4_getSubPixelLocations(DoG, features) ==
-                 sift->getSubPixelLocations(), "getSubPixelLocations");
+                 sift->clarifyKeypoints(), "getSubPixelLocations");
 
         QVERIFY(sift->data().points.size() == features.size());
 
@@ -78,13 +78,13 @@ class Sift_testTest : public QObject
            }
         }
 
-        aa = sift->removeUnstableFeatures();
+        aa = sift->filterKeypoints();
         bb = SIFT::step5_removeUnstableFeatures(DoG, features);
 
         QVERIFY2(aa == bb, "removeUnstableFeatures");
 
         SIFT::step6_computeFeatureAttributes(DoG, features);
-        sift->computeFeatureAttributes();
+        sift->finishKeypoints();
         QVERIFY(sift->data().points.size() == features.size());
 
         DescriptorPtr ptr(new Descriptor());

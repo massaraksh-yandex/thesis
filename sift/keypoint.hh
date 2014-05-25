@@ -5,15 +5,18 @@
 
 struct Keypoint
 {
+    typedef std::vector<Keypoint> Cont;
     // x = image column, y = image row, z = scale (blur) index
-    double x, y, z;		// pixel position
+    double x; // колонка
+    double y; // ряд
+    double z; //
     double dx, dy, dz;	// subpixel offsets
     int octave;			// octave index
     double magnitude;	// feature magnitude
     double angle;		// feature direction (angle)
     int direction;		// feature direction (index of histogram bin)
 
-    std::vector<Keypoint> neighbourhood;	// this saves angle and magnitude of neighbourhood of the feature
+    Cont neighbourhood;	// this saves angle and magnitude of neighbourhood of the feature
                                         // -- this is more like a temporatory variable (it could easily be private)
     std::vector<std::pair<double,double> > angmag;	// pair of angle,magnitude
 
@@ -23,6 +26,7 @@ struct Keypoint
         x(_x), y(_y), z(_z), octave(_o)
     { }
 };
+
 
 void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
                      Descriptor &descriptors);

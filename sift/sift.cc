@@ -26,34 +26,59 @@ int Sift::getKernelSize(double sigma)
 
 bool Sift::minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
-    if(img(x-1, y-1) >= pix) return false;
-    if(img(x-1, y  ) >= pix) return false;
-    if(img(x-1, y+1) >= pix) return false;
-    if(img(x  , y-1) >= pix) return false;
-    if(img(x  , y  ) >= pix) if(!dontCheckXY) return false;
-    if(img(x  , y+1) >= pix) return false;
-    if(img(x+1, y-1) >= pix) return false;
-    if(img(x+1, y  ) >= pix) return false;
-    if(img(x+1, y+1) >= pix) return false;
-    return true;
+    if(img(x-1, y-1) >= pix)
+        return false;
+    else if(img(x-1, y) >= pix)
+        return false;
+    else if(img(x-1, y+1) >= pix)
+        return false;
+    else if(img(x, y-1) >= pix)
+        return false;
+    else if(img(x, y) >= pix){
+        if(!dontCheckXY)
+            return false;
+    }
+
+    if(img(x, y+1) >= pix)
+        return false;
+    else if(img(x+1, y-1) >= pix)
+        return false;
+    else if(img(x+1, y) >= pix)
+        return false;
+    else if(img(x+1, y+1) >= pix)
+        return false;
+    else
+        return true;
 }
 
 bool Sift::maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
-    if(img(x-1, y-1) <= pix) return false;
-    if(img(x-1, y  ) <= pix) return false;
-    if(img(x-1, y+1) <= pix) return false;
-    if(img(x  , y-1) <= pix) return false;
-    if(img(x  , y  ) <= pix) if(!dontCheckXY) return false;
-    if(img(x  , y+1) <= pix) return false;
-    if(img(x+1, y-1) <= pix) return false;
-    if(img(x+1, y  ) <= pix) return false;
-    if(img(x+1, y+1) <= pix) return false;
+    if(img(x-1, y-1) <= pix)
+        return false;
+    else if(img(x-1, y) <= pix)
+        return false;
+    else if(img(x-1, y+1) <= pix)
+        return false;
+    else if(img(x, y-1) <= pix)
+        return false;
+    else if(img(x, y) <= pix){
+        if(!dontCheckXY)
+            return false;
+    }
 
-    return true;
+    if(img(x, y+1) <= pix)
+        return false;
+    else if(img(x+1, y-1) <= pix)
+        return false;
+    else if(img(x+1, y) <= pix)
+        return false;
+    else if(img(x+1, y+1) <= pix)
+        return false;
+    else
+        return true;
 }
 
-void Sift::getSubPixelExtrema(CImageVec &octave, Keypoint &keypoint)
+void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
 {
     boost::numeric::ublas::matrix<double> D(3,1),
                                           H(3,3),
@@ -76,12 +101,12 @@ void Sift::getSubPixelExtrema(CImageVec &octave, Keypoint &keypoint)
 
 CImage Sift::normalize(const cimg_library::CImg<unsigned char> &img)
 {
-    CImage norm(img);
-    for(int y = 0, ym = img.height(); y < ym; y++)
-        for(int x = 0, xm = img.width(); x < xm; x++)
-            norm(x,y) = float(img(x,y)) / 255.0f;
+    CImage out(img);
+    for(int y = 0; y < img.height(); y++)
+        for(int x = 0; x < img.width(); x++)
+            out(x,y) = float(img(x,y)) / 255.0f;
 
-    return norm;
+    return out;
 }
 
 Sift::Sift(QObject *obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
@@ -110,56 +135,50 @@ void Sift::load(CImagePtr image)
     img = *image;
 }
 
-void Sift::buildPyramid()
+void Sift::buildPyramidAndDoG()
 {
     CImageDoG pyramid;
-    //
-    /* 1. varianta */
-    CImage img_aa = normalize(img).blur(0.5);	// normalization & antialiasing
-    // Octaves (resample)
-    // 1st arg = 200% of x, 2nd arg = 200% of y, 3rd arg = 100% of z, 4th arg = 100% of c, 5th arg = interpolation (3-linear,1-none), rest is default; blur(0.5) is antialiasing
-    CImage img_m2   = img_aa  .get_resize(-200, -200, -100, -100, 1).blur(1.0);	// pre-blur the base image
-    CImage img_orig = img_m2  .get_resize(- 50, - 50, -100, -100, 1);	// negative value means percentage(%); positive value is absolute size in px
-    CImage img_d2   = img_orig.get_resize(- 50, - 50, -100, -100, 1);
-    CImage img_d4   = img_d2  .get_resize(- 50, - 50, -100, -100, 1);
-    //
-    const CImage* images[4] = { &img_m2, &img_orig, &img_d2, &img_d4 };
-    //
-    // Scale spaces (blur)
+
+    CImage src = normalize(img).blur(0.5);
+
+    CImage doubleImage  = src        .get_resize(-200, -200, -100, -100, 1).blur(1.0);
+    CImage originImage  = doubleImage.get_resize( -50,  -50, -100, -100, 1);
+    CImage halfImage    = originImage.get_resize( -50,  -50, -100, -100, 1);
+    CImage quarterImage = halfImage  .get_resize( -50,  -50, -100, -100, 1);
+
+    CImage* images[4] = { &doubleImage, &originImage, &halfImage, &quarterImage };
+
     for(int i = 0; i < 4; i++)
     {
         pyramid.push_back(vector<cimg_library::CImg<float> >());
         pyramid[i].push_back(*(images[i]));
         double sigma = Math::base();
-        for(size_t s = 1; s < 5; s++)
-        {	// use only the first column (m_sigmas[0]), because the multiplication (2x,4x,8x) is equivalent to downsampling
-            // -- f.e. if you resample an image by 1/2, then you consider only every 2nd pixel - downsampling is used
-            //         instead of bluring with a bigger kernel because of performace
-            pyramid[i].push_back(pyramid[i][s-1].get_blur(sigma));	// CImg::blur(sigma) uses the Gaussian blur
+        for(int s = 1; s < 5; s++)
+        {
+            pyramid[i].push_back(pyramid[i][s-1].get_blur(sigma));
             sigma *= Math::base();
         }
     }
-    for(size_t i = 0, im = pyramid.size(); i < im; i++)
+    for(int i = 0; i < pyramid.size(); i++)
     {
         _data.dog.push_back(CImageVec());
-        for(size_t s = 1, sm = pyramid[i].size(); s < sm; s++)
+        for(int s = 1; s < pyramid[i].size(); s++)
             _data.dog[i].push_back(pyramid[i][s-1] - pyramid[i][s]);
     }
 }
 
 
-int Sift::getFeatureCandidates()
+int Sift::computeKeypoints()
 {
-    for(size_t i = 0, im = _data.dog.size(); i < im; i++)
+    for(size_t i = 0; i < _data.dog.size(); i++)
     {
-        for(size_t s = 1, sm = _data.dog[i].size() - 1; s < sm; s++)
+        for(size_t s = 1; s < (_data.dog[i].size()-1); s++)
         {
-            for(int y = 1, ym = _data.dog[i][s].height() - 1; y < ym; y++)
+            for(int y = 1; y < (_data.dog[i][s].height()-1); y++)
             {
-                for(int x = 1, xm = _data.dog[i][s].width() - 1; x < xm; x++)
+                for(int x = 1; x < (_data.dog[i][s].width()-1); x++)
                 {
                     float px = _data.dog[i][s](x,y);
-                    // check for local extrema
 
                     bool max = true;
                     bool min = true;
@@ -170,34 +189,30 @@ int Sift::getFeatureCandidates()
                         max = max && maximumInLayer(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     if(min || max)
-                        _data.points.push_back(Keypoint(x, y, s, i));	// save the feature candidate
+                        _data.points.push_back(Keypoint(x, y, s, i));
                 }
             }
         }
     }
     return _data.points.size();
-#ifdef _DEBUG
-    cout << '\t' << data.points.size() << " local extremas was detected." << endl;
-#endif	// _DEBUG
 }
 
-int Sift::getSubPixelLocations()
+int Sift::clarifyKeypoints()
 {
+    const int MaxIters = 5;
 
-    const int MAX_ITERATIONS = 5;
-    //
     bool stable;
     double max_x, max_y, max_z;
     int y = 0;
-    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++ /*++f_it*/)
+    for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
     {
         stable = false;
         max_x = _data.dog[f_it->octave][f_it->z].width() - 2;
         max_y = _data.dog[f_it->octave][f_it->z].height() - 2;
         max_z = _data.dog[f_it->octave].size() - 2;
-        for(int it = 0; it < MAX_ITERATIONS; it++)
+        for(int it = 0; it < MaxIters; it++)
         {
-            getSubPixelExtrema(_data.dog[f_it->octave], *f_it);
+            subpixelExtrema(_data.dog[f_it->octave], *f_it);
             if((f_it->dx < 0.5) && (f_it->dy < 0.5) && (f_it->dz < 0.5))
             {
                 stable = true;
@@ -227,7 +242,7 @@ int Sift::getSubPixelLocations()
 #endif	// _DEBUG
 }
 
-int Sift::removeUnstableFeatures()
+int Sift::filterKeypoints()
 {
     // remove data.points with low contrast or points that lie on an edge
     boost::numeric::ublas::matrix<double> H(2,2);
@@ -271,7 +286,7 @@ int Sift::removeUnstableFeatures()
 #endif	// _DEBUG
 }
 
-void Sift::computeFeatureAttributes()
+void Sift::finishKeypoints()
 {
     int kernelSize;
     double sigma;
@@ -340,11 +355,11 @@ void Sift::computeFeatureAttributes()
 DescriptorPtr Sift::work()
 {
     DescriptorPtr d(new Descriptor());
-    buildPyramid();
-    getFeatureCandidates();
-    getSubPixelLocations();
-    removeUnstableFeatures();
-    computeFeatureAttributes();
+    buildPyramidAndDoG();
+    computeKeypoints();
+    clarifyKeypoints();
+    filterKeypoints();
+    finishKeypoints();
 
     for(Keypoint kp : _data.points)
     {
@@ -353,3 +368,6 @@ DescriptorPtr Sift::work()
 
     return d;
 }
+
+
+
