@@ -253,7 +253,7 @@ int Sift::removeUnstableFeatures()
     for(vector<Keypoint>::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // 2. the edge-like points check
-        Math::hessian2x2(_data.dog[f_it->octave][f_it->z], f_it->x, f_it->y, H);
+        Math::H2x2(_data.dog[f_it->octave][f_it->z], f_it->x, f_it->y, H);
         tr = H(0,0) + H(1,1);
         det = Math::det(H);
         if((det < 0) || (((tr*tr)/det) > ((CORNER+1)*(CORNER+1)/CORNER)))

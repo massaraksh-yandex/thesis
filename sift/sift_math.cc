@@ -6,22 +6,14 @@
 using namespace boost::numeric::ublas;
 
 namespace Math {
-int determinant_sign(const boost::numeric::ublas::permutation_matrix<int> &pm)
-{	// This was taken from http://www.anderswallin.net/2010/05/matrix-determinant-with-boostublas/
-    int pm_sign = 1;
-    size_t size = pm.size();
-    for(size_t i = 0; i < size; ++i)
-        if (i != pm(i))
-            pm_sign *= -1; // swap_rows would swap a pair of rows here, so we change sign
-    return pm_sign;
+double Gaussian2D(double x, double y, double s)
+{
+    double pi = (2*PI()*s*s);
+    double ex = exp(-(x*x+y*y)/(2.0*s*s));
+    return 1.0/pi*ex;
 }
 
-double Gaussian2D(double dx, double dy, double sigma)	// could be optimized byt not computing the Gaussian all over again
-{	// dx - distance from the center on x-axis; dy - analogy to the dx
-    return 1.0 / (2*PI()*sigma*sigma) * exp(-(dx*dx+dy*dy)/(2.0*sigma*sigma));
-}
-
-// compute a partial derivative of a 3D function
+// частичная 3д функция
 void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
     int x = kp.x;
@@ -32,8 +24,7 @@ void diff3D(CImageVec &space, const Keypoint& kp, Matrix &diff)
     diff(2,0) = double(space[z+1](x  ,y  ) - space[z-1](x  ,y  )) / 2.0;
 }
 
-// put together a 3x3 Hessian matrix
-void H3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat)
+void H3x3(const CImageVec &space, Keypoint& kp, Matrix &our)
 {
     // xx xy xz
     // xy yy yz
@@ -42,49 +33,54 @@ void H3x3(const CImageVec &space, Keypoint& kp, Matrix &h_mat)
     int y = kp.y;
     int z = kp.z;
 
-    h_mat(0,0) = space[z  ](x+1,y  ) + space[z  ](x-1,y  ) - 2 * space[z](x,y); // xx
-    h_mat(1,1) = space[z  ](x  ,y+1) + space[z  ](x  ,y-1) - 2 * space[z](x,y); // yy
-    h_mat(2,2) = space[z+1](x  ,y  ) + space[z-1](x  ,y  ) - 2 * space[z](x,y); // zz
+    our(0,0) = space[z  ](x+1,y  ) + space[z  ](x-1,y  ) - 2 * space[z](x,y); // xx
+    our(1,1) = space[z  ](x  ,y+1) + space[z  ](x  ,y-1) - 2 * space[z](x,y); // yy
+    our(2,2) = space[z+1](x  ,y  ) + space[z-1](x  ,y  ) - 2 * space[z](x,y); // zz
 
-    h_mat(1,0) = h_mat(0,1)
-               = space[z](x+1,y+1)+space[z](x-1,y-1)-space[z](x+1,y-1)-space[z](x-1,y+1); // Dxy
-    h_mat(2,0) = h_mat(0,2)
-               = space[z+1](x+1,y)+space[z-1](x-1,y)-space[z-1](x+1,y)-space[z+1](x-1,y); // Dxz
-    h_mat(2,1) = h_mat(1,2)
-               = space[z+1](x,y+1)+space[z-1](x,y-1)-space[z-1](x,y+1)-space[z+1](x,y-1); // Dyz
+    our(1,0) = our(0,1)
+               = space[z](x+1,y+1)+space[z](x-1,y-1)-space[z](x+1,y-1)-space[z](x-1,y+1); // xy
+    our(2,0) = our(0,2)
+               = space[z+1](x+1,y)+space[z-1](x-1,y)-space[z-1](x+1,y)-space[z+1](x-1,y); // xz
+    our(2,1) = our(1,2)
+               = space[z+1](x,y+1)+space[z-1](x,y-1)-space[z-1](x,y+1)-space[z+1](x,y-1); // yz
 }
 
-// put together a 2x2 Hessian matrix
-void hessian2x2(const CImage &space, int x, int y, Matrix &h_mat)
+void H2x2(const CImage &space, int x, int y, Matrix &out)
 {
-    //     (Dxx, Dxy)
-    // H = (Dxy, Dyy)
-    // ==============
-    h_mat(0,0) = space(x+1,y  ) + space(x-1,y  ) - 2 * space(x,y);	// Dxx
-    h_mat(1,1) = space(x  ,y+1) + space(x  ,y-1) - 2 * space(x,y);	// Dyy
+    // xx xy
+    // xy yy
+    out(0,0) = space(x+1,y  ) + space(x-1,y  ) - 2 * space(x,y); // xx
+    out(1,1) = space(x  ,y+1) + space(x  ,y-1) - 2 * space(x,y); // yy
     //
-    h_mat(1,0) = h_mat(0,1) = space(x+1,y+1) + space(x-1,y-1) - space(x+1,y-1) - space(x-1,y+1);	// Dxy
+    out(1,0) = out(0,1)
+            = space(x+1,y+1) + space(x-1,y-1) - space(x+1,y-1) - space(x-1,y+1); // xy
 }
 
 bool inverse(Matrix &input, Matrix &inverse)
-{	// This was taken from http://savingyoutime.wordpress.com/2009/09/21/c-matrix-inversion-boostublas/
-    // create a working copy of the input
+{
     Matrix mat(input);
 
-    // create a permutation matrix for the LU-factorization
-    permutation_matrix<size_t> pm(mat.size1());
+    // фигачим перестановки
+    permutation_matrix<int> pm(mat.size1());
 
-    // perform LU-factorization
-    int res = lu_factorize(mat, pm);
-    if (res != 0) return false;
+    // LU
+    if (lu_factorize(mat, pm))
+        return false;
 
-    // create identity matrix of "inverse"
     inverse.assign(identity_matrix<double> (mat.size1()));
 
-    // backsubstitute to get the inverse
     lu_substitute(mat, pm, inverse);
 
     return true;
+}
+
+int detSign(const permutation_matrix<int> &pm)
+{
+    int sign = 1;
+    for(int i = 0; i < pm.size(); ++i)
+        if (i != pm(i))
+            sign *= -1;
+    return sign;
 }
 
 double det(Matrix &m)
@@ -95,8 +91,8 @@ double det(Matrix &m)
     }
     else
     {
-        boost::numeric::ublas::permutation_matrix<int> pm(m.size1());
-        if(boost::numeric::ublas::lu_factorize(m,pm))
+        permutation_matrix<int> pm(m.size1());
+        if(lu_factorize(m,pm))
         {
             return 0.0;
         }
@@ -105,7 +101,7 @@ double det(Matrix &m)
             double det = 1.0;
             for(int i = 0; i < m.size1(); i++)
                 det *= m(i,i);
-            return det * determinant_sign(pm);
+            return det * detSign(pm);
         }
     }
 }
