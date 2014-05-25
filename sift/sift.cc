@@ -199,54 +199,61 @@ int Sift::clarifyKeypoints()
 {
     const int MaxIters = 5;
 
-    int y = 0;
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); y++)
+    Keypoint::Cont nArray;
+    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
     {
         CImage& img = _data.dog[f_it->octave][f_it->Bl];
-//        CImageVec
+        CImageVec& oct = _data.dog[f_it->octave];
+
         double maxX = img.width() - 2;
         double maxY = img.height() - 2;
-        double maxZ = _data.dog[f_it->octave].size() - 2;
+        double maxZ = oct.size() - 2;
         bool isStable = false;
+
         for(int it = 0; it < MaxIters; it++)
         {
-            subpixelExtrema(_data.dog[f_it->octave], *f_it);
-            if((f_it->dx < 0.5) && (f_it->dy < 0.5) && (f_it->dz < 0.5))
+            subpixelExtrema(oct, *f_it);
+
+            // достаточно близко
+            if((f_it->dx < 0.5) &&
+               (f_it->dy < 0.5) &&
+               (f_it->dz < 0.5))
             {
                 isStable = true;
                 break;
             }
-            // else update position and try it again
-            f_it->X += double(f_it->dx >= 0.5);
-            f_it->Y += double(f_it->dy >= 0.5);
-            f_it->Bl += double(f_it->dz >= 0.5);
-            // check for out-of-image location
-            if((f_it->X < 1) || (f_it->Y < 1) || (f_it->Bl < 1) || (f_it->X > maxX) || (f_it->Y > maxY) || (f_it->Bl > maxZ))
+
+            if(f_it->dx >= 0.5)
+                f_it->X += 1;
+            if(f_it->dy >= 0.5)
+                f_it->Y += 1;
+            if(f_it->dz >= 0.5)
+                f_it->Bl += 1;
+            // выход за границы
+            if((f_it->X < 1)    || (f_it->Y < 1)    || (f_it->Bl < 1) ||
+               (f_it->X > maxX) || (f_it->Y > maxY) || (f_it->Bl > maxZ))
             {
                 isStable = false;
                 break;
             }
         }
-        if(!isStable)	// unstable feature
+        if(isStable)
         {
-            f_it = _data.points.erase(f_it);
-            continue;
+            nArray.push_back(*f_it);
         }
-        ++f_it;
     }
+    _data.points.swap(nArray);
     return _data.points.size();
 }
 
 int Sift::filterKeypoints()
 {
-    // remove data.points with low contrast or points that lie on an edge
+    // удаляем низкоконтрастные точки или точки на ребре
     boost::numeric::ublas::matrix<double> H(2,2);
     double contrast, tr, det;
+    Keypoint::Cont nArray;
     for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
-        // pozn.: na zkusebnich obrazcich davaji obe verze totozne vysledky, coz je dobre, ale
-        //        zatim to necham pixoleve, kdyz stejne subpixelovou informaci dal nepouzivam
-        //   -- pixel version
         contrast = _data.dog[f_it->octave][f_it->Bl](f_it->X,f_it->Y);
         if(fabs(contrast) < CONTRAST)
         {
@@ -256,7 +263,6 @@ int Sift::filterKeypoints()
         // the following element
         ++f_it;
     }
-    int y = _data.points.size();
     for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); )
     {
         // 2. the edge-like points check
