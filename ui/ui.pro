@@ -13,19 +13,22 @@ SOURCES += main.cc\
     descriptorwidget.cc \
     comparingwidget.cc \
     messageswidget.cc \
-    testingwidget.cc
+    testingwidget.cc \
+    noisewidget.cc
 
 HEADERS  += mainwindow.hh \
     descriptorwidget.hh \
     comparingwidget.hh \
     messageswidget.hh \
-    testingwidget.hh
+    testingwidget.hh \
+    noisewidget.hh
 
 FORMS    += mainwindow.ui \
     descriptorwidget.ui \
     comparingwidget.ui \
     messageswidget.ui \
-    testingwidget.ui
+    testingwidget.ui \
+    noisewidget.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../core/release/ -lcore
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../core/debug/ -lcore
@@ -52,3 +55,6 @@ else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/release/sift.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/debug/sift.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../sift/libsift.a
+
+RESOURCES += \
+    resources.qrc

@@ -23,10 +23,8 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
     auto euclidianFn = [](double sum, double el) { return sum + el*el; };
     int failed = 0;
 
-    qDebug() << "in" << d.size();
     for(int i = 0; i < d.size(); i++)
     {
-        if(i % 100 == 1)qDebug() << i;
         auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
 
         double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
@@ -41,8 +39,6 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
             failed++;
     }
 
-    qDebug() << "out";
-
     return (double)(d.size() - failed) / d.size();
 }
 
@@ -52,8 +48,8 @@ CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)
 
     switch(type.first)
     {
-    case GIN: gaussianImageNoise(*im, type.second); break;
-    case SAPIN: saltAndPepperNoise(*im, type.second); break;
+    case GIN:   *im = src->get_noise(type.second * 100, 0); break;
+    case SAPIN: *im = src->get_noise(type.second * 100, 2); break;
     default:break;
     }
 

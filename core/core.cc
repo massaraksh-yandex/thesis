@@ -92,25 +92,25 @@ void Core::testImages(QString dirName, ImageNoises types)
 
             auto images = QtConcurrent::blockingMapped<QList<CImagePtr> >(types.begin(),
                                                                           types.end(), buildNoised);
-            emit log(Log::Message, 1, QString("Созданы изображения с шумами"));
+            emit log(Log::Message, 2, QString("Созданы изображения с шумами"));
 
             images.push_back(image);
 
             auto descriptors = QtConcurrent::blockingMapped<QList<DescriptorPtr> >(images, computeDescriptor);
-            emit log(Log::Message, 1, QString("Дескрипторы посчитаны"));
+            emit log(Log::Message, 2, QString("Дескрипторы посчитаны"));
 
             DescriptorPtr sourceDescr = descriptors.last();
             descriptors.pop_back();
 
             auto forest = QtConcurrent::blockingMapped<QList<KDTreePtr> >(descriptors, buildKDTrees);
-            emit log(Log::Message, 1, QString("К-мерные деревья сформированы"));
+            emit log(Log::Message, 2, QString("К-мерные деревья сформированы"));
 
 
             std::function<double(KDTreePtr)> compareTrees = [sourceDescr](KDTreePtr tree) { return compareDescriptors(sourceDescr, tree); };
 
             QList<double> currentResults = QtConcurrent::blockingMapped<QList<double> >(forest, compareTrees);
 
-            emit log(Log::Message, 1, QString("Обработка закончена"));
+            emit log(Log::Message, 2, QString("Обработка закончена"));
 
             results.push_back(TestingResult(fi.fileName(), currentResults));
         }
@@ -122,6 +122,9 @@ void Core::testImages(QString dirName, ImageNoises types)
 
         emit progress(i+1, files.size());
     }
+
+    for(int i = 0; i < results.size(); i++)
+        qDebug() << results[i].filename << results[i].results;
 
     emit testingFinished(results);
 }

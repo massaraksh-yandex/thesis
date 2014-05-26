@@ -12,9 +12,6 @@ class TestingWidget : public QWidget
 {
     Q_OBJECT
 
-    QStringList noises;
-    QList<QPair<ImageNoiseType, double>> _data;
-
 public:
     explicit TestingWidget(QWidget *parent = 0);
     ~TestingWidget();
@@ -24,8 +21,8 @@ public:
 
 private slots:
     void openFolder();
-    void comboChanged(int);
     void addNoise();
+    void removeNoise();
     void startPressed();
 signals:
     void log(Log::LogType type, int shift, QString str);
@@ -33,6 +30,10 @@ signals:
 
 private:
     Ui::TestingWidget *ui;
+    QStringList noises;
+    QList<QPair<ImageNoiseType, double>> _data;
+
+    void enableMainButton();
 };
 
 #endif // TESTINGWIDGET_HH

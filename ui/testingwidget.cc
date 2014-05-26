@@ -4,7 +4,7 @@
 #include <QVariant>
 #include <QFileDialog>
 #include <QStringListModel>
-
+#include "noisewidget.hh"
 
 TestingWidget::TestingWidget(QWidget *parent) :
     QWidget(parent),
@@ -13,13 +13,9 @@ TestingWidget::TestingWidget(QWidget *parent) :
     ui->setupUi(this);
     noises << tr("Гауссов шум")  << tr("Шум Salt and pepper");
 
-    ui->comboNoise->setModel(new QStringListModel(noises, ui->comboNoise));
-    ui->comboNoise->setCurrentIndex(0);
-    comboChanged(0);
-
     connect(ui->pushOpen, SIGNAL(clicked()), SLOT(openFolder()));
-    connect(ui->comboNoise, SIGNAL(currentIndexChanged(int)), SLOT(comboChanged(int)));
     connect(ui->pushAdd, SIGNAL(clicked()), SLOT(addNoise()));
+    connect(ui->pushDelete, SIGNAL(clicked()), SLOT(removeNoise()));
     connect(ui->pushStart, SIGNAL(clicked()), SLOT(startPressed()));
 }
 
@@ -39,20 +35,20 @@ void TestingWidget::openFolder()
 
     if(!path.isEmpty())
         ui->linePath->setText(path);
-}
 
-void TestingWidget::comboChanged(int i)
-{
-    if(i == 0)
-        ui->spinValue->setMaximum(0.6);
-    else
-        ui->spinValue->setMaximum(1.0);
+    enableMainButton();
 }
 
 void TestingWidget::addNoise()
 {
-    QString type = noises[ui->comboNoise->currentIndex()];
-    double val = ui->spinValue->value();
+    NoiseWidget* w = new NoiseWidget(this);
+    w->exec();
+
+    if(w->result() == QDialog::Rejected)
+        return;
+
+    QString type = noises[(int)w->noise()];
+    double val = w->value();
     int i = 0;
     for(; i < ui->tableNoise->rowCount(); i++)
     {
@@ -69,6 +65,17 @@ void TestingWidget::addNoise()
     ui->tableNoise->insertRow(ui->tableNoise->rowCount());
     ui->tableNoise->setItem(i, 0, new QTableWidgetItem(type));
     ui->tableNoise->setItem(i, 1, new QTableWidgetItem(QString::number(val)));
+    enableMainButton();
+}
+
+void TestingWidget::removeNoise()
+{
+    int index = ui->tableNoise->currentRow();
+    if(index == -1)
+        return;
+
+    ui->tableNoise->removeRow(index);
+    enableMainButton();
 }
 
 void TestingWidget::startPressed()
@@ -97,6 +104,13 @@ void TestingWidget::startPressed()
             emit accepted();
         }
     }
+}
+
+void TestingWidget::enableMainButton()
+{
+    bool a = !ui->linePath->text().isEmpty();
+    bool b = ui->tableNoise->rowCount() > 0;
+    ui->pushStart->setEnabled(a && b);
 }
 
 

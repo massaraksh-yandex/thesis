@@ -25,7 +25,7 @@ void MessagesWidget::log(Log::LogType type, int shift, QString str)
         case Log::Error: text += "Ошибка: "; break;
     }
 
-    for(int i = 0; i < shift; i++) text += "\t";
+    for(int i = 0; i < shift; i++) text += " ";
     text += str;
     ui->text->setPlainText(oldText + text);
 }

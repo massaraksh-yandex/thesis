@@ -30,6 +30,7 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
 
     connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
+    connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     resize(440, 480);
