@@ -3,7 +3,8 @@
 
 using namespace std;
 
-void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descriptors)
+void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
+                     Descriptor &descriptors)
 {
     point.neighbourhood.clear();
 
@@ -45,7 +46,7 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
             for(int h = 0; h < 4; h++)
                 hist[i][h].resize(8);
         }
-        // 4x4x8 x y ,angle]
+        // 4x4x8  x y angle
         for(Keypoint& neib : point.neighbourhood)
         {
             neib.angle = 180.0 + (neib.angle * 180.0 / Math::PI());

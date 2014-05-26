@@ -12,26 +12,28 @@ DescriptorPtr computeDescriptor(CImagePtr img)
     DescriptorPtr out;
 
     Sift* sift = new Sift(img, 0);
-    out = sift->work();
+    sift->formKeypoints();
+    out = sift->computeDescriptors();
 
     return out;
 }
 
-double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
+double compareDescriptors(Descriptor d, KDTreePtr tree)
 {
-    qDebug() << reinterpret_cast<long long>(tree.data());
-
     KDTree& tr = *tree.data();
-    Descriptor d = *src;
 
     auto euclidianFn = [](double sum, double el) { return sum + el*el; };
     int failed = 0;
 
     for(int i = 0; i < d.size(); i++)
     {
+        if(i % 100 == 1)
+            qDebug() << i << d.size();
+
         auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
         QList<double> list = *iter;
         double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
+
 
         iter++;
 
@@ -44,18 +46,6 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
         if(std::sqrt(second / first) <= 1.5)
             failed++;
     }
-
-//    clock_t fir = 0, sec = 0;
-//    for(int i = 0; i < times.size(); i++)
-//    {
-//        if(i % 2 == 0)
-//            fir += times[i];
-//        else
-//            sec += times[i];
-//    }
-
-//    qDebug() << fir / (times.size()*0.5)  << sec / (times.size()*0.5);
-    qDebug() << reinterpret_cast<long long>(tree.data());
 
     return (double)(d.size() - failed) / d.size();
 }

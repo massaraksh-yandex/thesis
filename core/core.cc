@@ -1,6 +1,6 @@
-#include <QTextStream>
 #include <QtConcurrent/QtConcurrent>
 #include <QSharedPointer>
+#include <QTextStream>
 #include <QFile>
 #include <QDir>
 
@@ -16,55 +16,207 @@
 typedef spatial::point_multiset<128, QList<double> > KDTree;
 typedef QSharedPointer<KDTree > KDTreePtr;
 
-DescriptorId Core::generateId() const
+void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& desc, QString& error)
 {
-    static DescriptorId rr = 0;
-    return rr++;
-}
+    QFile file(str);
 
-void Core::computeDescriptors(QString image)
-{
-    Descriptor desk;
-
-    Sift* sift = new Sift(image, 0);
-
-    data.push_back(sift->work());
-
-    emit computingFinished(data.size()-1);
-}
-
-void Core::writeDescriptor(DescriptorId id, QString name)
-{
-    if(data.size() >= id)
+    if(file.open(QFile::Text | QFile::ReadOnly))
     {
-        emit log(Log::Error, 0, "Unknown descriptor " + QString::number(id));
+        error = "Не могу открыть файл" + str;
         return;
     }
 
-    QFile file(name);
-    if(file.open(QFile::ReadOnly | QFile::Text))
-    {
-        emit log(Log::Error, 0, "Cannot open file " + name);
-        return;
-    }
-
-    Descriptor& d = *data[id];
     QTextStream stream(&file);
 
-    for(int i = 0; i < d.size(); i++)
+    while(!stream.atEnd())
     {
-        for(int h = 0; h < d[i].size(); h++)
+        auto lineStr1 = stream.readLine();
+        if(lineStr1.isEmpty())
+            break;
+        auto lineStr = lineStr1.split(',');
+
+        bool bX, bY;
+        int x = lineStr[0].toInt(&bX);
+        int y = lineStr[1].toInt(&bY);
+
+        if(!bX || !bY)
         {
-            stream << d[i][h] << " ";
+            error = "Ошибка в файле";
+            return;
         }
-        stream << endl;
+
+        coords.push_back(qMakePair(x, y));
+
+        QList<double> lineDouble;
+        lineDouble.reserve(lineStr.size() - 2);
+        for(int i = 2; i < lineStr.size(); i++)
+        {
+            QString& str = lineStr[i];
+            bool b;
+            double dd = str.toDouble(&b);
+            if(!bX)
+            {
+                error = "Ошибка в файле";
+                return;
+            }
+
+            lineDouble.push_back(dd);
+        }
+
+        if(lineDouble.size() != 128)
+        {
+            error = "Ошибка в файле";
+            return;
+        }
+        desc.push_back(lineDouble);
     }
-    file.close();
 }
 
-void Core::compareImages(DescriptorId im1, DescriptorId im2)
+void Core::computeDescriptorsToFile(QString image, QString filename)
 {
-    
+    QFile file(filename);
+    if(!file.open(QFile::Text | QFile::WriteOnly))
+    {
+        emit log(Log::Error, 0, "Не могу открыть файл " + filename);
+        emit failed();
+        return;
+    }
+    emit progress(0, 0);
+    Sift* sift = new Sift(image, 0);
+
+    KeypointCoords coords = sift->formKeypoints();
+    DescriptorPtr ptr = sift->computeDescriptors();
+
+    QTextStream stream(&file);
+
+    for(int i = 0; i < coords.size(); i++)
+    {
+        stream << coords[i].first << "," << coords[i].second << ",";
+        Descriptor::value_type& d = (*ptr)[i];
+        for(int h = 0; h < d.size()-1; h++)
+            stream << d[h] << ",";
+        stream << d.back() << endl;
+    }
+
+    delete sift;
+
+    emit progress(0, 1);
+    emit log(Log::Message, 0, "Дескрипторы записаны в файл " + filename);
+    emit writingFinished();
+}
+
+//void Core::writeKeypoints(Keypoint::Cont cont, QString name)
+//{
+//    QFile file(name);
+//    if(file.open(QFile::ReadOnly | QFile::Text))
+//    {
+//        emit log(Log::Error, 0, "Cannot open file " + name);
+//        return;
+//    }
+
+//    Descriptor& d = *data[cont];
+//    QTextStream stream(&file);
+
+//    for(int i = 0; i < d.size(); i++)
+//    {
+//        for(int h = 0; h < d[i].size(); h++)
+//        {
+//            stream << d[i][h] << " ";
+//        }
+//        stream << endl;
+//    }
+//    file.close();
+//}
+
+void Core::compareImages(QString im1, QString im2, int types)
+{
+    KeypointCoords im1Coords, im2Coords;
+    Descriptor im1Desc, im2Desc;
+
+    QFile f1(im1), f2(im2);
+    if(!f1.open(QFile::Text | QFile::WriteOnly))
+    {
+        emit log(Log::Error, 0, "Не могу открыть файл " + im1);
+        emit failed();
+        return;
+    }
+    if(!f2.open(QFile::Text | QFile::WriteOnly))
+    {
+        emit log(Log::Error, 0, "Не могу открыть файл " + im2);
+        emit failed();
+        return;
+    }
+
+    QString error;
+    if(types & 1)
+    {
+        keypointsFromFile(im1, im1Coords, im1Desc, error);
+        if(!error.isEmpty())
+        {
+            emit log(Log::Error, 0, error);
+            emit failed();
+            return;
+        }
+    }
+    else
+    {
+        Sift* sift = new Sift(im1, 0);
+
+        im1Coords = sift->formKeypoints();
+        im1Desc = *sift->computeDescriptors();
+        delete sift;
+    }
+
+    if(types & 2)
+    {
+        keypointsFromFile(im2, im2Coords, im2Desc, error);
+        if(!error.isEmpty())
+        {
+            emit log(Log::Error, 0, error);
+            emit failed();
+            return;
+        }
+    }
+    else
+    {
+        Sift* sift = new Sift(im2, 0);
+
+        im2Coords = sift->formKeypoints();
+        im2Desc = *sift->computeDescriptors();
+        delete sift;
+    }
+
+    KDTreePtr tree(new KDTree());
+    for(int i = 0; i != im1Desc[i].size(); i++)
+    {
+        tree->insert(im1Desc[i]);
+    }
+
+    auto euclidianFn = [](double sum, double el) { return sum + el*el; };
+    int failed = 0;
+
+//    for(int i = 0; i < d.size(); i++)
+//    {
+//        if(i % 100 == 1)
+//            qDebug() << i << d.size();
+
+//        auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
+//        QList<double> list = *iter;
+//        double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
+
+
+//        iter++;
+
+//        if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
+//            continue;
+
+//        list = *iter;
+//        double second = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
+
+//        if(std::sqrt(second / first) <= 1.5)
+//            failed++;
+//    }
+
 }
 
 void Core::testImages(QString dirName, ImageNoises types)
@@ -105,18 +257,19 @@ void Core::testImages(QString dirName, ImageNoises types)
             auto forest = QtConcurrent::blockingMapped<QList<KDTreePtr> >(descriptors, buildKDTrees);
             emit log(Log::Message, 2, QString("К-мерные деревья сформированы"));
 
-
-
-            Descriptor& dd = *sourceDescr;
             std::function<double(KDTreePtr)> compareTrees =
                     [sourceDescr](KDTreePtr tree)
-            { return compareDescriptors(DescriptorPtr(sourceDescr.data()), tree); };
+            { return compareDescriptors(*sourceDescr, tree); };
 
             QList<double> currentResults = QtConcurrent::blockingMapped<QList<double> >(forest, compareTrees);
 
             emit log(Log::Message, 2, QString("Обработка закончена"));
 
-            results.push_back(TestingResult(fi.fileName(), currentResults));
+            TestingResult res;
+            res.filename = fi.fileName();
+            for(double d : currentResults)
+                res.results.push_back(d);
+            results.push_back(res);
         }
         catch(...)
         {
@@ -133,13 +286,10 @@ void Core::testImages(QString dirName, ImageNoises types)
     emit testingFinished(results);
 }
 
-
-Q_DECLARE_METATYPE(DescriptorId)
+Q_DECLARE_METATYPE(Keypoint)
 Q_DECLARE_METATYPE(TestingResult)
 Q_DECLARE_METATYPE(TestingResults)
 Q_DECLARE_METATYPE(Log::LogType)
 Q_DECLARE_METATYPE(ImageNoiseType)
 Q_DECLARE_METATYPE(ImageNoisePair)
 Q_DECLARE_METATYPE(ImageNoises)
-
-

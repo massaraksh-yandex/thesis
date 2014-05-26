@@ -9,7 +9,6 @@ DescriptorWidget::DescriptorWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->buttonOpen, SIGNAL(clicked()), SLOT(openClicked()));
-    connect(ui->buttonSave, SIGNAL(clicked()), SLOT(saveClicked()));
     connect(ui->buttonCompute, SIGNAL(clicked()), SLOT(computeClicked()));
 }
 
@@ -26,12 +25,9 @@ void DescriptorWidget::openClicked()
         ui->lineEdit->setText(path);
 }
 
-void DescriptorWidget::saveClicked()
-{
-
-}
-
 void DescriptorWidget::computeClicked()
 {
-
+    QString path = QFileDialog::getSaveFileName(this, "Сохранить дескрипторы", "", "*.descr");
+    if(!path.isEmpty())
+        emit accepted(ui->lineEdit->text(), path);
 }

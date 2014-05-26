@@ -140,13 +140,13 @@ void TestingWidget::finishTesting(TestingResults tr)
     for(auto& header : _data)
     {
         if(header.first == GIN)
-            stream << "Гауссов шум, сигма == ";
+            stream << "Гауссов шум, параметр == ";
         else
             stream << "Шум salt and pepper, параметр == ";
 
-        stream << header.second;
+        stream << header.second << ";";
     }
-
+    stream << endl;
     for(TestingResult& res : tr)
     {
         stream << res.filename << ";";
@@ -154,6 +154,8 @@ void TestingWidget::finishTesting(TestingResults tr)
             stream << d << ";";
         stream << endl;
     }
+    emit log(Log::Message, 0, "Отчёт сохранён в файл " + file.fileName());
+    file.close();
 }
 
 void TestingWidget::enableMainButton()

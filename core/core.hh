@@ -4,6 +4,7 @@
 #include <QLibrary>
 #include <QString>
 #include <QList>
+#include <QFile>
 #include <QVector>
 
 #include "global_core.hh"
@@ -11,32 +12,27 @@
 #include "noise.hh"
 #include "sift.hh"
 
-typedef unsigned int DescriptorId;
-
 class Core : public QObject
 {
     Q_OBJECT
 
-    DescriptorId generateId() const;
-
-    QLibrary lib;
-    QList<DescriptorPtr> data;
+    void keypointsFromFile(QString str, KeypointCoords &coords, Descriptor &desc, QString& error);
 
 public:
     Core(QObject *parent) : QObject(parent)
     { }
 
 public slots:
-    void computeDescriptors(QString image);
-    void writeDescriptor(DescriptorId id, QString name);
-    void compareImages(DescriptorId im1, DescriptorId im2);
+    void computeDescriptorsToFile(QString image, QString filename);
+    void compareImages(QString im1, QString im2, int types);
     void testImages(QString dir, ImageNoises types);
 
 signals:
     void log(Log::LogType type, int indent, QString message);
     void progress(int value, int maximum);
+    void failed();
 
-    void computingFinished(DescriptorId);
+    void computingFinished(KeypointCoords, DescriptorPtr);
     void writingFinished();
     void testingFinished(TestingResults);
 };

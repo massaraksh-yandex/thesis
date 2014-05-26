@@ -5,6 +5,7 @@
 
 #include "global.hh"
 #include "siftdata.hh"
+#include "keypoint.hh"
 
 class Sift : public QObject
 {
@@ -26,7 +27,9 @@ public:
     int filterKeypoints();
     void finishKeypoints();
 
-    DescriptorPtr work();
+    KeypointCoords formKeypoints();
+
+    DescriptorPtr computeDescriptors();
 
     SiftData& data() { return _data; }
 

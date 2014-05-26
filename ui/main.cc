@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     qRegisterMetaType<Log::LogType>("Log::LogType");
     qRegisterMetaType<TestingResult>("TestingResult");
     qRegisterMetaType<TestingResults>("TestingResults");
+    qRegisterMetaType<Keypoint::Cont>("Keypoint::Cont");
+    qRegisterMetaType<KeypointCoords>("KeypointCoords");
 
     QApplication a(argc, argv);
 

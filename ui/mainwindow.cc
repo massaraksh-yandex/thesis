@@ -34,6 +34,7 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(core, SIGNAL(testingFinished(TestingResults)), testingWidget, SLOT(finishTesting(TestingResults)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
+    connect(descriptorWidget, SIGNAL(accepted(QString, QString)), core, SLOT(computeDescriptorsToFile(QString,QString)));
     resize(440, 480);
 }
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>361</width>
-    <height>282</height>
+    <height>251</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,7 +25,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Файл</string>
+        <string>Картинка</string>
        </property>
       </widget>
      </item>
@@ -55,13 +55,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonSave">
-       <property name="text">
-        <string>Сохранить в файл</string>
-       </property>
-      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="buttonCompute">

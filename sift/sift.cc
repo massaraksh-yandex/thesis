@@ -326,15 +326,26 @@ void Sift::finishKeypoints()
     }
 }
 
-DescriptorPtr Sift::work()
+KeypointCoords Sift::formKeypoints()
 {
-    DescriptorPtr d(new Descriptor());
     buildPyramidAndDoG();
     computeKeypoints();
     clarifyKeypoints();
     filterKeypoints();
     finishKeypoints();
 
+    KeypointCoords out;
+    out.reserve(_data.points.size());
+
+    for(Keypoint& kp: _data.points)
+        out.push_back(qMakePair((int)kp.X, (int)kp.Y));
+
+    return out;
+}
+
+DescriptorPtr Sift::computeDescriptors()
+{
+    DescriptorPtr d(new Descriptor());
     for(Keypoint kp : _data.points)
     {
         buildDescriptor(kp, _data.dog, *d);

@@ -3,9 +3,11 @@
 
 #include "global.hh"
 
+typedef QList<QPair<int, int>> KeypointCoords;
+
 struct Keypoint
 {
-    typedef std::list<Keypoint> Cont;
+    typedef QList<Keypoint> Cont;
     typedef std::vector<std::pair<double,double> > Histogram;
     typedef Cont::iterator iterator;
 

@@ -14,7 +14,7 @@ typedef spatial::point_multiset<128, QList<double>> KDTree;
 typedef QSharedPointer<KDTree> KDTreePtr;
 
 DescriptorPtr computeDescriptor(CImagePtr img);
-double compareDescriptors(DescriptorPtr src, KDTreePtr tree);
+double compareDescriptors(Descriptor src, KDTreePtr tree);
 CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type);
 KDTreePtr buildKDTrees(DescriptorPtr d);
 
