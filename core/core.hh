@@ -13,18 +13,6 @@
 
 typedef unsigned int DescriptorId;
 
-struct TestingResult
-{
-    QString filename;
-    QList<double> results;
-
-    TestingResult() { }
-    TestingResult(QString name, QList<double> res)
-        : filename(name), results(res)
-    { }
-};
-typedef QList<TestingResult> TestingResults;
-
 class Core : public QObject
 {
     Q_OBJECT

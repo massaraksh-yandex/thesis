@@ -1,10 +1,13 @@
 #include "testingwidget.hh"
 #include "ui_testingwidget.h"
 
-#include <QVariant>
-#include <QFileDialog>
 #include <QStringListModel>
+#include <QFileDialog>
+#include <QTextStream>
+#include <QVariant>
+
 #include "noisewidget.hh"
+#include "core.hh"
 
 TestingWidget::TestingWidget(QWidget *parent) :
     QWidget(parent),
@@ -17,6 +20,7 @@ TestingWidget::TestingWidget(QWidget *parent) :
     connect(ui->pushAdd, SIGNAL(clicked()), SLOT(addNoise()));
     connect(ui->pushDelete, SIGNAL(clicked()), SLOT(removeNoise()));
     connect(ui->pushStart, SIGNAL(clicked()), SLOT(startPressed()));
+    connect(ui->pushFile, SIGNAL(clicked()), SLOT(setOutputName()));
 }
 
 TestingWidget::~TestingWidget()
@@ -101,8 +105,54 @@ void TestingWidget::startPressed()
 
                 _data.push_back(qMakePair(item0, item1));
             }
-            emit accepted();
+
+            if(!file.isOpen())
+                emit log(Log::Fail, 0, "Не могу открыть файл "+file.fileName());
+            else
+                emit accepted();
         }
+    }
+}
+
+void TestingWidget::setOutputName()
+{
+    QString str = QFileDialog::getSaveFileName(this, "Файл отчёта", "", "CSV(*.csv)");
+
+    if(str.isEmpty())
+    {
+        enableMainButton();
+        return;
+    }
+
+    ui->lineFile->setText(str);
+
+    file.close();
+    file.setFileName(ui->lineFile->text());
+
+    file.open(QFile::WriteOnly | QFile::Text);
+    enableMainButton();
+}
+
+void TestingWidget::finishTesting(TestingResults tr)
+{
+    QTextStream stream(&file);
+
+    for(auto& header : _data)
+    {
+        if(header.first == GIN)
+            stream << "Гауссов шум, сигма == ";
+        else
+            stream << "Шум salt and pepper, параметр == ";
+
+        stream << header.second;
+    }
+
+    for(TestingResult& res : tr)
+    {
+        stream << res.filename << ";";
+        for(double d : res.results)
+            stream << d << ";";
+        stream << endl;
     }
 }
 
@@ -110,7 +160,8 @@ void TestingWidget::enableMainButton()
 {
     bool a = !ui->linePath->text().isEmpty();
     bool b = ui->tableNoise->rowCount() > 0;
-    ui->pushStart->setEnabled(a && b);
+    bool c = file.isOpen();
+    ui->pushStart->setEnabled(a && b && c);
 }
 
 

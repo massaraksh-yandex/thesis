@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>468</width>
-    <height>248</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,8 +56,8 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0" colspan="3">
       <widget class="QTableWidget" name="tableNoise">
        <property name="editTriggers">
         <set>QAbstractItemView::NoEditTriggers</set>
@@ -80,7 +80,7 @@
        </column>
       </widget>
      </item>
-     <item>
+     <item row="0" column="3">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <spacer name="verticalSpacer_2">
@@ -123,6 +123,27 @@
         </spacer>
        </item>
       </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Файл отчёта</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QPushButton" name="pushFile">
+       <property name="text">
+        <string>Выбрать...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QLineEdit" name="lineFile">
+       <property name="readOnly">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -5,6 +5,8 @@
 #include "point_multiset.hpp"
 #include "bits/spatial_euclidian_neighbor.hpp"
 
+#include <ctime>
+
 DescriptorPtr computeDescriptor(CImagePtr img)
 {
     DescriptorPtr out;
@@ -17,6 +19,8 @@ DescriptorPtr computeDescriptor(CImagePtr img)
 
 double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
 {
+    qDebug() << reinterpret_cast<long long>(tree.data());
+
     KDTree& tr = *tree.data();
     Descriptor d = *src;
 
@@ -26,18 +30,32 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree)
     for(int i = 0; i < d.size(); i++)
     {
         auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
+        QList<double> list = *iter;
+        double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
 
-        double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
         iter++;
 
         if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
             continue;
 
-        double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
+        list = *iter;
+        double second = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
 
-        if(std::sqrt(second / first) <= 2.5)
+        if(std::sqrt(second / first) <= 1.5)
             failed++;
     }
+
+//    clock_t fir = 0, sec = 0;
+//    for(int i = 0; i < times.size(); i++)
+//    {
+//        if(i % 2 == 0)
+//            fir += times[i];
+//        else
+//            sec += times[i];
+//    }
+
+//    qDebug() << fir / (times.size()*0.5)  << sec / (times.size()*0.5);
+    qDebug() << reinterpret_cast<long long>(tree.data());
 
     return (double)(d.size() - failed) / d.size();
 }

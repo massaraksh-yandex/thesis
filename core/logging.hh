@@ -23,5 +23,17 @@ enum ImageNoiseType
 typedef QPair<ImageNoiseType, double> ImageNoisePair;
 typedef QList<ImageNoisePair> ImageNoises;
 
+struct TestingResult
+{
+    QString filename;
+    QList<double> results;
+
+    TestingResult() { }
+    TestingResult(QString name, QList<double> res)
+        : filename(name), results(res)
+    { }
+};
+typedef QList<TestingResult> TestingResults;
+
 
 #endif // LOGGING_HH

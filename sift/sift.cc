@@ -132,7 +132,7 @@ void Sift::buildPyramidAndDoG()
     images.append(images[1].get_resize( -50,  -50, -100, -100, 1));
     images.append(images[2].get_resize( -50,  -50, -100, -100, 1));
 
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < images.size(); i++)
     {
         pyramid.push_back(CImageVec());
         pyramid[i].push_back(images[i]);
@@ -289,35 +289,35 @@ void Sift::finishKeypoints()
         }
 
         // считаем магнитуды и углы для точек окна
-        for(Keypoint::iterator n_it = point.neighbourhood.begin(); n_it != point.neighbourhood.end(); ++n_it)
+        for(Keypoint::Cont::value_type& neibour : point.neighbourhood)
         {
-            CImage& img = _data.dog[n_it->octave][n_it->Bl];
+            CImage& img = _data.dog[neibour.octave][neibour.Bl];
 
-            n_it->magnitude = sqrt(pow(img(n_it->X+1,n_it->Y)   - img(n_it->X-1,n_it->Y),   2.0f)
-                                 + pow(img(n_it->X,  n_it->Y+1) - img(n_it->X,  n_it->Y-1), 2.0f));
+            neibour.magnitude = sqrt(pow(img(neibour.X+1,neibour.Y)   - img(neibour.X-1,neibour.Y),   2.0f)
+                                   + pow(img(neibour.X,  neibour.Y+1) - img(neibour.X,  neibour.Y-1), 2.0f));
 
-            n_it->angle = atan2((img(n_it->X,  n_it->Y+1) - img(n_it->X,  n_it->Y-1)),
-                                (img(n_it->X+1,n_it->Y)   - img(n_it->X-1,n_it->Y)));
+            neibour.angle = atan2((img(neibour.X,  neibour.Y+1) - img(neibour.X,  neibour.Y-1)),
+                                  (img(neibour.X+1,neibour.Y)   - img(neibour.X-1,neibour.Y)));
         }
 
         // строим гистограмму с 36 бинами
         Keypoint::VectorDouble hist(36, 0.0);
-        for(Keypoint::iterator n_it = point.neighbourhood.begin(); n_it != point.neighbourhood.end(); ++n_it)
+        for(Keypoint::Cont::value_type& neibour : point.neighbourhood)
         {
-            n_it->angle = 180 + (n_it->angle * 180.0 / Math::PI());	// градусы
-            int indX = n_it->angle / 10;
+            neibour.angle = 180 + (neibour.angle * 180.0 / Math::PI());	// градусы
+            int indX = neibour.angle / 10;
 
-            double x = n_it->X - point.X;
-            double y = n_it->Y - point.Y;
-            hist[indX] += n_it->magnitude * Math::Gaussian(x, y, 1.5*sigma);
+            double x = neibour.X - point.X;
+            double y = neibour.Y - point.Y;
+            hist[indX] += neibour.magnitude * Math::Gaussian(x, y, 1.5*sigma);
         }
 
         // максимальный бин
-        int max_i = std::max_element(hist.begin()++, hist.end()) - hist.begin();
-        point.angmag.push_back(std::make_pair(max_i*10, hist[max_i]));	// направление точки
+        int maxInd = std::max_element(hist.begin()++, hist.end()) - hist.begin();
+        point.angmag.push_back(std::make_pair(maxInd*10, hist[maxInd]));	// направление точки
 
         // дополнительные направления
-        double threshold = hist[max_i]*0.8;
+        double threshold = hist[maxInd]*0.8;
         for(int i = 0, im = hist.size(); i < im; ++i)
         {
             if(hist[i] >= threshold)

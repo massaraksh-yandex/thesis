@@ -5,6 +5,7 @@
 #include "mainwindow.hh"
 #include "core.hh"
 #include "noise.hh"
+#include "logging.hh"
 
 
 int main(int argc, char *argv[])
@@ -13,17 +14,17 @@ int main(int argc, char *argv[])
     qRegisterMetaType<ImageNoisePair>("ImageNoisePair");
     qRegisterMetaType<ImageNoises>("ImageNoises");
     qRegisterMetaType<Log::LogType>("Log::LogType");
+    qRegisterMetaType<TestingResult>("TestingResult");
+    qRegisterMetaType<TestingResults>("TestingResults");
+
     QApplication a(argc, argv);
 
-    Core* c = new Core(0);
 
-    MainWindow* w = new MainWindow(c);
+    Core* c = new Core(0);
+    MainWindow* w = new MainWindow(c, 0);
 
     QThread* thread = new QThread();
     c->moveToThread(thread);
-
-    QObject::connect(w, SIGNAL(startTesting(QString,ImageNoises)),
-                     c, SLOT(testImages(QString,ImageNoises)));
 
     w->show();
     thread->start();

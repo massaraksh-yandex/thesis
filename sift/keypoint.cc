@@ -29,14 +29,14 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
     {
         const CImage& img = DoG[kp.octave][kp.Bl];
         kp.magnitude = sqrt(pow(img(kp.X+1,kp.Y)   - img(kp.X-1,kp.Y),   2.0f)
-                            + pow(img(kp.X,  kp.Y+1) - img(kp.X,  kp.Y-1), 2.0f));
+                          + pow(img(kp.X,  kp.Y+1) - img(kp.X,  kp.Y-1), 2.0f));
 
         // в радианах
         kp.angle = atan2((img(kp.X,  kp.Y+1) - img(kp.X,  kp.Y-1)),
                          (img(kp.X+1,kp.Y)   - img(kp.X-1,kp.Y)));
     }
 
-    for(Keypoint::Histogram::value_type& am_it : point.angmag)
+    for(Keypoint::Histogram::value_type& peak : point.angmag)
     {
         Keypoint::D3Histogram hist(4, Keypoint::MatrixDouble());
         for(int i = 0; i < 4; i++)
@@ -49,7 +49,7 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG, Descriptor &descript
         for(Keypoint& neib : point.neighbourhood)
         {
             neib.angle = 180.0 + (neib.angle * 180.0 / Math::PI());
-            neib.angle = am_it.first - neib.angle;
+            neib.angle = peak.first - neib.angle;
 
             // углы должны быть от 0 до 360 градусов
             while(neib.angle < 0.0)

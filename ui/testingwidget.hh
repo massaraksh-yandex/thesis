@@ -2,6 +2,7 @@
 #define TESTINGWIDGET_HH
 
 #include <QWidget>
+#include <QFile>
 #include "logging.hh"
 
 namespace Ui {
@@ -24,12 +25,18 @@ private slots:
     void addNoise();
     void removeNoise();
     void startPressed();
+    void setOutputName();
+
+public slots:
+    void finishTesting(TestingResults tr);
+
 signals:
     void log(Log::LogType type, int shift, QString str);
     void accepted();
 
 private:
     Ui::TestingWidget *ui;
+    QFile file;
     QStringList noises;
     QList<QPair<ImageNoiseType, double>> _data;
 

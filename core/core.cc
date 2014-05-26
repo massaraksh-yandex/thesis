@@ -106,7 +106,11 @@ void Core::testImages(QString dirName, ImageNoises types)
             emit log(Log::Message, 2, QString("К-мерные деревья сформированы"));
 
 
-            std::function<double(KDTreePtr)> compareTrees = [sourceDescr](KDTreePtr tree) { return compareDescriptors(sourceDescr, tree); };
+
+            Descriptor& dd = *sourceDescr;
+            std::function<double(KDTreePtr)> compareTrees =
+                    [sourceDescr](KDTreePtr tree)
+            { return compareDescriptors(DescriptorPtr(sourceDescr.data()), tree); };
 
             QList<double> currentResults = QtConcurrent::blockingMapped<QList<double> >(forest, compareTrees);
 
