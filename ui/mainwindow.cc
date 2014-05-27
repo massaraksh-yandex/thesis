@@ -1,3 +1,4 @@
+#include <QMetaType>
 #include "mainwindow.hh"
 #include "ui_mainwindow.h"
 
@@ -35,6 +36,9 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(descriptorWidget, SIGNAL(accepted(QString, QString)), core, SLOT(computeDescriptorsToFile(QString,QString)));
+    connect(comparingWidget, SIGNAL(compare(QString,QString,int)), core, SLOT(compareImages(QString,QString,int)));
+    connect(core, SIGNAL(compared(QMap<double,double>,KeypointCoords,KeypointCoords)),
+            comparingWidget, SLOT(show(QMap<double,double>,KeypointCoords,KeypointCoords)));
     resize(440, 480);
 }
 

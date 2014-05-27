@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <string>
 
-
 typedef spatial::point_multiset<128, QList<double> > KDTree;
 typedef QSharedPointer<KDTree > KDTreePtr;
 
@@ -105,29 +104,6 @@ void Core::computeDescriptorsToFile(QString image, QString filename)
     emit writingFinished();
 }
 
-//void Core::writeKeypoints(Keypoint::Cont cont, QString name)
-//{
-//    QFile file(name);
-//    if(file.open(QFile::ReadOnly | QFile::Text))
-//    {
-//        emit log(Log::Error, 0, "Cannot open file " + name);
-//        return;
-//    }
-
-//    Descriptor& d = *data[cont];
-//    QTextStream stream(&file);
-
-//    for(int i = 0; i < d.size(); i++)
-//    {
-//        for(int h = 0; h < d[i].size(); h++)
-//        {
-//            stream << d[i][h] << " ";
-//        }
-//        stream << endl;
-//    }
-//    file.close();
-//}
-
 void Core::compareImages(QString im1, QString im2, int types)
 {
     KeypointCoords im1Coords, im2Coords;
@@ -192,31 +168,15 @@ void Core::compareImages(QString im1, QString im2, int types)
         tree->insert(im1Desc[i]);
     }
 
-    auto euclidianFn = [](double sum, double el) { return sum + el*el; };
-    int failed = 0;
+    QMap<double, double> res;
 
-//    for(int i = 0; i < d.size(); i++)
-//    {
-//        if(i % 100 == 1)
-//            qDebug() << i << d.size();
+    for(int i = 0; i < im1Desc.size(); i++)
+    {
+        emit progress(i, im1Desc.size());
+        compareTwoImages(i, tree, im1Desc, res, im2Desc);
+    }
 
-//        auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
-//        QList<double> list = *iter;
-//        double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
-
-
-//        iter++;
-
-//        if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
-//            continue;
-
-//        list = *iter;
-//        double second = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
-
-//        if(std::sqrt(second / first) <= 1.5)
-//            failed++;
-//    }
-
+    emit compared(res, im1Coords, im2Coords);
 }
 
 void Core::testImages(QString dirName, ImageNoises types)
@@ -233,6 +193,7 @@ void Core::testImages(QString dirName, ImageNoises types)
     for(int i = 0; i < files.size(); i++)
     {
         QFileInfo& fi = files[i];
+        qDebug() << fi.fileName();
         try
         {
             CImagePtr image(new CImage());
@@ -250,6 +211,7 @@ void Core::testImages(QString dirName, ImageNoises types)
 
             auto descriptors = QtConcurrent::blockingMapped<QList<DescriptorPtr> >(images, computeDescriptor);
             emit log(Log::Message, 2, QString("Дескрипторы посчитаны"));
+            for(CImagePtr p : images) p->clear();
 
             DescriptorPtr sourceDescr = descriptors.last();
             descriptors.pop_back();
@@ -259,9 +221,10 @@ void Core::testImages(QString dirName, ImageNoises types)
 
             std::function<double(KDTreePtr)> compareTrees =
                     [sourceDescr](KDTreePtr tree)
-            { return compareDescriptors(*sourceDescr, tree); };
+            { return compareDescriptors(sourceDescr, tree); };
 
             QList<double> currentResults = QtConcurrent::blockingMapped<QList<double> >(forest, compareTrees);
+            for(KDTreePtr tr : forest) tr.clear();
 
             emit log(Log::Message, 2, QString("Обработка закончена"));
 

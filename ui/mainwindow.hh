@@ -32,6 +32,7 @@ private slots:
 signals:
     void log(Log::LogType type, int shift, QString str);
     void startTesting(QString, ImageNoises);
+    void blockStartButtons(bool);
 
 private:
     Ui::MainWindow *ui;

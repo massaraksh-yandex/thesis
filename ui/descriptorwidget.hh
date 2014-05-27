@@ -16,6 +16,9 @@ public:
     explicit DescriptorWidget(QWidget *parent = 0);
     ~DescriptorWidget();
 
+public slots:
+    void blockStartButton(bool);
+
 signals:
     void log(Log::LogType type, int shift, QString str);
     void accepted(QString, QString);

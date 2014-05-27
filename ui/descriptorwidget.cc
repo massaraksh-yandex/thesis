@@ -17,6 +17,11 @@ DescriptorWidget::~DescriptorWidget()
     delete ui;
 }
 
+void DescriptorWidget::blockStartButton(bool block)
+{
+    ui->buttonCompute->setEnabled(block);
+}
+
 void DescriptorWidget::openClicked()
 {
     QString path = QFileDialog::getOpenFileName(this, "Открыть изображение", "", "Images (*.png *.jpg)");

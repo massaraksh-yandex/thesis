@@ -27,7 +27,7 @@ public:
     int filterKeypoints();
     void finishKeypoints();
 
-    KeypointCoords formKeypoints();
+    QList<QPair<int,int>> formKeypoints();
 
     DescriptorPtr computeDescriptors();
 

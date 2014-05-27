@@ -29,6 +29,7 @@ private slots:
 
 public slots:
     void finishTesting(TestingResults tr);
+    void blockStartButton(bool block);
 
 signals:
     void log(Log::LogType type, int shift, QString str);

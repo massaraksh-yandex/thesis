@@ -4,6 +4,7 @@
 #include <QLibrary>
 #include <QString>
 #include <QList>
+#include <QMap>
 #include <QFile>
 #include <QVector>
 
@@ -30,9 +31,9 @@ public slots:
 signals:
     void log(Log::LogType type, int indent, QString message);
     void progress(int value, int maximum);
-    void failed();
 
-    void computingFinished(KeypointCoords, DescriptorPtr);
+    void compared(Map, KeypointCoords, KeypointCoords);
+    void failed();
     void writingFinished();
     void testingFinished(TestingResults);
 };

@@ -68,13 +68,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushDiff">
-       <property name="text">
-        <string>Показать различия</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="pushCompare">
        <property name="text">
         <string>Сравниить</string>

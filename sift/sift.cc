@@ -326,7 +326,7 @@ void Sift::finishKeypoints()
     }
 }
 
-KeypointCoords Sift::formKeypoints()
+QList<QPair<int, int> > Sift::formKeypoints()
 {
     buildPyramidAndDoG();
     computeKeypoints();
@@ -334,7 +334,7 @@ KeypointCoords Sift::formKeypoints()
     filterKeypoints();
     finishKeypoints();
 
-    KeypointCoords out;
+    QList<QPair<int, int> > out;
     out.reserve(_data.points.size());
 
     for(Keypoint& kp: _data.points)

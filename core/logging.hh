@@ -1,6 +1,7 @@
 #ifndef LOGGING_HH
 #define LOGGING_HH
 
+#include <QMap>
 #include <QPair>
 #include <QList>
 
@@ -23,6 +24,9 @@ enum ImageNoiseType
 typedef QPair<ImageNoiseType, double> ImageNoisePair;
 typedef QList<ImageNoisePair> ImageNoises;
 
+typedef QList<QPair<int, int>> KeypointCoords;
+typedef QMap<double, double> Map;
+
 struct TestingResult
 {
     QString filename;
@@ -33,6 +37,7 @@ struct TestingResult
         : filename(name), results(res)
     { }
 };
+
 typedef QList<TestingResult> TestingResults;
 
 

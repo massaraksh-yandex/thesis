@@ -14,21 +14,24 @@ SOURCES += main.cc\
     comparingwidget.cc \
     messageswidget.cc \
     testingwidget.cc \
-    noisewidget.cc
+    noisewidget.cc \
+    showdiffwidget.cc
 
 HEADERS  += mainwindow.hh \
     descriptorwidget.hh \
     comparingwidget.hh \
     messageswidget.hh \
     testingwidget.hh \
-    noisewidget.hh
+    noisewidget.hh \
+    showdiffwidget.hh
 
 FORMS    += mainwindow.ui \
     descriptorwidget.ui \
     comparingwidget.ui \
     messageswidget.ui \
     testingwidget.ui \
-    noisewidget.ui
+    noisewidget.ui \
+    showdiffwidget.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../core/release/ -lcore
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../core/debug/ -lcore

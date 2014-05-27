@@ -62,6 +62,4 @@ inline void saltAndPepperNoise(CImage& img, double r)
     img.get_noise(r, 2);
 }
 
-
-
 #endif // NOISE_HH

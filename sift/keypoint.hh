@@ -3,8 +3,6 @@
 
 #include "global.hh"
 
-typedef QList<QPair<int, int>> KeypointCoords;
-
 struct Keypoint
 {
     typedef QList<Keypoint> Cont;

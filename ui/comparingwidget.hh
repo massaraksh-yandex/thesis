@@ -16,8 +16,16 @@ public:
     explicit ComparingWidget(QWidget *parent = 0);
     ~ComparingWidget();
 
+public slots:
+    void show(QMap<double, double>, KeypointCoords, KeypointCoords);
+
 signals:
     void log(Log::LogType type, int shift, QString str);
+    void compare(QString, QString, int);
+
+private slots:
+    void startPressed();
+    void openPressed();
 
 private:
     Ui::ComparingWidget *ui;
