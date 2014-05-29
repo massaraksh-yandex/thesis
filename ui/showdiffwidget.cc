@@ -30,14 +30,18 @@ void ShowDiffWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
 
-    p.drawImage(0, 0, image1);
-    p.drawImage(image1.width() + SHIFT, 0, image2);
+    p.drawImage(0, 0, image2);
+    p.drawImage(image2.width() + SHIFT, 0, image1);
 
     p.setPen(Qt::red);
+    int index= 0;
     for(auto i = map.begin(); i != map.end(); i++)
     {
-        QPoint x(im1[i.key()].first, im1[i.value()].second);
-        QPoint y(im2[i.key()].first + image1.width() + SHIFT, im2[i.value()].second);
-        p.drawLine(x, y);
+        int index1point = i.key();
+        int index2point = i.value();
+        QPoint x(im1[index1point].first, im1[index1point].second);
+        QPoint y(im2[index2point].first + image1.width() + SHIFT, im2[index2point].second);
+        p.drawLine(y, x);
+        index++;
     }
 }

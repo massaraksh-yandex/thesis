@@ -32,13 +32,13 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(this, SIGNAL(startTesting(QString,ImageNoises)), core, SLOT(testImages(QString,ImageNoises)));
     connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
-    connect(core, SIGNAL(testingFinished(TestingResults)), testingWidget, SLOT(finishTesting(TestingResults)));
+    connect(core, SIGNAL(testimagesComplete(TestingResults)), testingWidget, SLOT(finishTesting(TestingResults)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
-    connect(descriptorWidget, SIGNAL(accepted(QString, QString)), core, SLOT(computeDescriptorsToFile(QString,QString)));
+    connect(descriptorWidget, SIGNAL(accepted(QString, QString)), core, SLOT(buildDescriptors(QString,QString)));
     connect(comparingWidget, SIGNAL(compare(QString,QString,int)), core, SLOT(compareImages(QString,QString,int)));
-    connect(core, SIGNAL(compared(QMap<double,double>,KeypointCoords,KeypointCoords)),
-            comparingWidget, SLOT(show(QMap<double,double>,KeypointCoords,KeypointCoords)));
+    connect(core, SIGNAL(compareImagesComplete(Map,KeypointCoords,KeypointCoords)),
+            comparingWidget, SLOT(show(Map,KeypointCoords,KeypointCoords)));
     resize(440, 480);
 }
 

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Программа тестирования алгоритма SIFT</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -37,8 +37,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>98</width>
-        <height>28</height>
+        <width>423</width>
+        <height>322</height>
        </rect>
       </property>
       <attribute name="label">
@@ -50,8 +50,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>98</width>
-        <height>28</height>
+        <width>423</width>
+        <height>322</height>
        </rect>
       </property>
       <attribute name="label">

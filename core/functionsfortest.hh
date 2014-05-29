@@ -18,7 +18,7 @@ double compareDescriptors(DescriptorPtr src, KDTreePtr tree);
 CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type);
 KDTreePtr buildKDTrees(DescriptorPtr d);
 
-void compareTwoImages(int i, KDTreePtr tr, Descriptor &im1Desc, QMap<double, double>& res, Descriptor& im2Desc);
+void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor &im1Desc, Descriptor& im2Desc);
 
 
 #endif // FUNCTIONSFORTEST_HH

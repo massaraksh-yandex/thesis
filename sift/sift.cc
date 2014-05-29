@@ -326,7 +326,7 @@ void Sift::finishKeypoints()
     }
 }
 
-QList<QPair<int, int> > Sift::formKeypoints()
+void Sift::formKeypoints()
 {
     buildPyramidAndDoG();
     computeKeypoints();
@@ -334,21 +334,22 @@ QList<QPair<int, int> > Sift::formKeypoints()
     filterKeypoints();
     finishKeypoints();
 
-    QList<QPair<int, int> > out;
-    out.reserve(_data.points.size());
+//    QList<QPair<int, int> > out;
+//    out.reserve(_data.points.size());
 
-    for(Keypoint& kp: _data.points)
-        out.push_back(qMakePair((int)kp.X, (int)kp.Y));
+//    for(Keypoint& kp: _data.points)
+//        out.push_back(qMakePair((int)kp.X, (int)kp.Y));
 
-    return out;
+//    return out;
 }
 
-DescriptorPtr Sift::computeDescriptors()
+DescriptorPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)
 {
+    points.clear();
     DescriptorPtr d(new Descriptor());
     for(Keypoint kp : _data.points)
     {
-        buildDescriptor(kp, _data.dog, *d);
+        buildDescriptor(kp, _data.dog, *d, points);
     }
 
     return d;

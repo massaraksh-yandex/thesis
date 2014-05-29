@@ -19,23 +19,29 @@ class Core : public QObject
 
     void keypointsFromFile(QString str, KeypointCoords &coords, Descriptor &desc, QString& error);
 
+    volatile bool _interrupt;
+
 public:
-    Core(QObject *parent) : QObject(parent)
+    Core(QObject *parent) : QObject(parent), _interrupt(true)
     { }
 
 public slots:
-    void computeDescriptorsToFile(QString image, QString filename);
+    void buildDescriptors(QString image, QString filename);
     void compareImages(QString im1, QString im2, int types);
     void testImages(QString dir, ImageNoises types);
+
+    void interrupt();
 
 signals:
     void log(Log::LogType type, int indent, QString message);
     void progress(int value, int maximum);
 
-    void compared(Map, KeypointCoords, KeypointCoords);
-    void failed();
-    void writingFinished();
-    void testingFinished(TestingResults);
+    void started();
+    void stopped();
+
+    void compareImagesComplete(Map, KeypointCoords, KeypointCoords);
+    void buildDescriptorsComplete();
+    void testimagesComplete(TestingResults);
 };
 
 void gaussianImageNoise(CImage& img, double sigma);

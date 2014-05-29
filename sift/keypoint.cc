@@ -4,7 +4,7 @@
 using namespace std;
 
 void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                     Descriptor &descriptors)
+                     Descriptor &descriptors, QList<QPair<int, int> >& points)
 {
     point.neighbourhood.clear();
 
@@ -67,6 +67,9 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
         }
 
         descriptors.push_back(QList<double>());
+
+        double fact[] = {0.5, 1.0, 2.0, 4.0};
+        points.push_back(qMakePair((int)point.X * fact[point.octave], (int)point.Y * fact[point.octave]));
         Descriptor::value_type& line = descriptors.back();
 
         for(int x = 0; x < hist.size(); x++)

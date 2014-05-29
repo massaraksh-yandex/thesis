@@ -19,16 +19,14 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
 {
     QFile file(str);
 
-    if(file.open(QFile::Text | QFile::ReadOnly))
-    {
+    if(file.open(QFile::Text | QFile::ReadOnly)) {
         error = "Не могу открыть файл" + str;
         return;
     }
 
     QTextStream stream(&file);
 
-    while(!stream.atEnd())
-    {
+    while(!stream.atEnd()) {
         auto lineStr1 = stream.readLine();
         if(lineStr1.isEmpty())
             break;
@@ -38,8 +36,7 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
         int x = lineStr[0].toInt(&bX);
         int y = lineStr[1].toInt(&bY);
 
-        if(!bX || !bY)
-        {
+        if(!bX || !bY) {
             error = "Ошибка в файле";
             return;
         }
@@ -53,8 +50,7 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
             QString& str = lineStr[i];
             bool b;
             double dd = str.toDouble(&b);
-            if(!bX)
-            {
+            if(!b) {
                 error = "Ошибка в файле";
                 return;
             }
@@ -62,8 +58,7 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
             lineDouble.push_back(dd);
         }
 
-        if(lineDouble.size() != 128)
-        {
+        if(lineDouble.size() != 128) {
             error = "Ошибка в файле";
             return;
         }
@@ -71,25 +66,34 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
     }
 }
 
-void Core::computeDescriptorsToFile(QString image, QString filename)
+void Core::buildDescriptors(QString image, QString filename)
 {
+    emit started();
+    _interrupt = false;
+
     QFile file(filename);
-    if(!file.open(QFile::Text | QFile::WriteOnly))
-    {
+    if(!file.open(QFile::Text | QFile::WriteOnly)) {
         emit log(Log::Error, 0, "Не могу открыть файл " + filename);
-        emit failed();
+        emit stopped();
         return;
     }
-    emit progress(0, 0);
-    Sift* sift = new Sift(image, 0);
 
-    KeypointCoords coords = sift->formKeypoints();
-    DescriptorPtr ptr = sift->computeDescriptors();
+    emit progress(0, 0);
+
+    KeypointCoords coords;
+    DescriptorPtr ptr;
+
+    std::shared_ptr<Sift> sift(new Sift(image, 0));
+    sift->formKeypoints();
+    ptr = sift->computeDescriptors(coords);
 
     QTextStream stream(&file);
+    for(int i = 0; i < coords.size(); i++) {
+        if(_interrupt) {
+            emit stopped();
+            return;
+        }
 
-    for(int i = 0; i < coords.size(); i++)
-    {
         stream << coords[i].first << "," << coords[i].second << ",";
         Descriptor::value_type& d = (*ptr)[i];
         for(int h = 0; h < d.size()-1; h++)
@@ -97,91 +101,73 @@ void Core::computeDescriptorsToFile(QString image, QString filename)
         stream << d.back() << endl;
     }
 
-    delete sift;
-
-    emit progress(0, 1);
     emit log(Log::Message, 0, "Дескрипторы записаны в файл " + filename);
-    emit writingFinished();
+    emit stopped();
+    emit buildDescriptorsComplete();
 }
 
 void Core::compareImages(QString im1, QString im2, int types)
 {
-    KeypointCoords im1Coords, im2Coords;
-    Descriptor im1Desc, im2Desc;
+    emit started();
+    _interrupt = false;
 
-    QFile f1(im1), f2(im2);
-    if(!f1.open(QFile::Text | QFile::WriteOnly))
-    {
-        emit log(Log::Error, 0, "Не могу открыть файл " + im1);
-        emit failed();
-        return;
-    }
-    if(!f2.open(QFile::Text | QFile::WriteOnly))
-    {
-        emit log(Log::Error, 0, "Не могу открыть файл " + im2);
-        emit failed();
-        return;
-    }
+    KeypointCoords coords[2];
+    Descriptor descr[2];
+    QString ims[] = { im1, im2 };
+
 
     QString error;
-    if(types & 1)
-    {
-        keypointsFromFile(im1, im1Coords, im1Desc, error);
-        if(!error.isEmpty())
-        {
-            emit log(Log::Error, 0, error);
-            emit failed();
+    std::shared_ptr<Sift> sift(new Sift(0));
+
+    for(int i = 0; i < 2; i++) {
+        if(_interrupt) {
+            emit stopped();
             return;
         }
-    }
-    else
-    {
-        Sift* sift = new Sift(im1, 0);
 
-        im1Coords = sift->formKeypoints();
-        im1Desc = *sift->computeDescriptors();
-        delete sift;
-    }
-
-    if(types & 2)
-    {
-        keypointsFromFile(im2, im2Coords, im2Desc, error);
-        if(!error.isEmpty())
-        {
-            emit log(Log::Error, 0, error);
-            emit failed();
-            return;
+        if(types & (i+1)) {
+            keypointsFromFile(ims[i], coords[i], descr[i], error);
+            if(!error.isEmpty()) {
+                emit log(Log::Error, 0, error);
+                emit stopped();
+                return;
+            }
         }
-    }
-    else
-    {
-        Sift* sift = new Sift(im2, 0);
-
-        im2Coords = sift->formKeypoints();
-        im2Desc = *sift->computeDescriptors();
-        delete sift;
+        else {
+            sift->load(ims[i]);
+            sift->formKeypoints();
+            descr[i] = *sift->computeDescriptors(coords[i]);
+        }
     }
 
     KDTreePtr tree(new KDTree());
-    for(int i = 0; i != im1Desc[i].size(); i++)
-    {
-        tree->insert(im1Desc[i]);
+    for(int i = 0; i != descr[0].size(); i++) {
+        if(_interrupt) {
+            emit stopped();
+            return;
+        }
+        tree->insert(descr[0]);
     }
 
-    QMap<double, double> res;
+    Map res;
+    for(int i = 0; i < descr[1].size(); i++) {
+        if(_interrupt) {
+            emit stopped();
+            return;
+        }
 
-    for(int i = 0; i < im1Desc.size(); i++)
-    {
-        emit progress(i, im1Desc.size());
-        compareTwoImages(i, tree, im1Desc, res, im2Desc);
+        emit progress(i, descr[1].size());
+        compareTwoImages(i, tree, res, descr[0], descr[1]);
     }
 
-    emit compared(res, im1Coords, im2Coords);
+    emit compareImagesComplete(res, im1Coords, im2Coords);
 }
 
 void Core::testImages(QString dirName, ImageNoises types)
 {
-    qDebug() << "here";
+    emit started();
+    _interrupt = false;
+
     QDir dir(dirName);
     QStringList l; l << "*.jpg" << "*.png";
     dir.setNameFilters(l);
@@ -192,6 +178,11 @@ void Core::testImages(QString dirName, ImageNoises types)
     emit progress(0, files.size());
     for(int i = 0; i < files.size(); i++)
     {
+        if(_interrupt) {
+            emit stopped();
+            return;
+        };
+
         QFileInfo& fi = files[i];
         qDebug() << fi.fileName();
         try
@@ -243,10 +234,13 @@ void Core::testImages(QString dirName, ImageNoises types)
         emit progress(i+1, files.size());
     }
 
-    for(int i = 0; i < results.size(); i++)
-        qDebug() << results[i].filename << results[i].results;
+    emit stopped();
+    emit testimagesComplete(results);
+}
 
-    emit testingFinished(results);
+void Core::interrupt()
+{
+    _interrupt = true;
 }
 
 Q_DECLARE_METATYPE(Keypoint)

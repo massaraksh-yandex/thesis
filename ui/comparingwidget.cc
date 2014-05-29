@@ -19,7 +19,7 @@ ComparingWidget::~ComparingWidget()
     delete ui;
 }
 
-void ComparingWidget::show(QMap<double, double> d, KeypointCoords k1, KeypointCoords k2)
+void ComparingWidget::show(Map d, KeypointCoords k1, KeypointCoords k2)
 {
     ShowDiffWidget* w = new ShowDiffWidget(k1, k2, d);
     w->open(ui->linePath->text(), ui->linePath2->text());

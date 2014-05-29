@@ -13,7 +13,8 @@ DescriptorPtr computeDescriptor(CImagePtr img)
 
     Sift* sift = new Sift(img, 0);
     sift->formKeypoints();
-    out = sift->computeDescriptors();
+    KeypointCoords d;
+    out = sift->computeDescriptors(d);
     delete sift;
 
     return out;
@@ -80,25 +81,37 @@ KDTreePtr buildKDTrees(DescriptorPtr d)
     return tree;
 }
 
-void compareTwoImages(int i, KDTreePtr tr, Descriptor& im1Desc, QMap<double, double> &res, Descriptor& im2Desc)
+void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor& im1Desc,
+                      Descriptor& im2Desc)
 {
     auto euclidianFn = [](double sum, double el) { return sum + el*el; };
 
 
-        auto iter = spatial::euclidian_neighbor_begin(*tr, im1Desc[i]);
-        QList<double> list = *iter;
-        double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
+    auto iter = spatial::euclidian_neighbor_begin(*tr, im2Desc[i]);
 
-        iter++;
+    int index = -1;
+    for(int h = 0; h < im1Desc.size(); h++)
+        if(*iter == im1Desc[h])
+            index = h;
 
-        if(iter == spatial::euclidian_neighbor_end(*tr, im1Desc[i]))
-            return;
+    if(index == -1)
+        return;
 
-        double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
+    double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
-        if(std::sqrt(second / first) <= 1.5)
-        {
-            res[i] = im2Desc.indexOf(*iter);
-        }
+    iter++;
 
+    if(iter == spatial::euclidian_neighbor_end(*tr, im2Desc[i]))
+        return;
+
+    double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
+
+    if(std::sqrt(second / first) <= 1.5)
+    {
+        res[index] = i;
+    }
+    else
+    {
+        qDebug() << "fail";
+    }
 }

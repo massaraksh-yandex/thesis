@@ -25,7 +25,7 @@ typedef QPair<ImageNoiseType, double> ImageNoisePair;
 typedef QList<ImageNoisePair> ImageNoises;
 
 typedef QList<QPair<int, int>> KeypointCoords;
-typedef QMap<double, double> Map;
+typedef QMap<int, int> Map;
 
 struct TestingResult
 {

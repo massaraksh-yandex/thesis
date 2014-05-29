@@ -17,7 +17,7 @@ public:
     ~ComparingWidget();
 
 public slots:
-    void show(QMap<double, double>, KeypointCoords, KeypointCoords);
+    void show(Map, KeypointCoords, KeypointCoords);
 
 signals:
     void log(Log::LogType type, int shift, QString str);

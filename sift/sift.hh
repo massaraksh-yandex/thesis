@@ -27,9 +27,9 @@ public:
     int filterKeypoints();
     void finishKeypoints();
 
-    QList<QPair<int,int>> formKeypoints();
+    void formKeypoints();
 
-    DescriptorPtr computeDescriptors();
+    DescriptorPtr computeDescriptors(QList<QPair<int,int>>& points);
 
     SiftData& data() { return _data; }
 

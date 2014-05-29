@@ -137,6 +137,7 @@ void TestingWidget::finishTesting(TestingResults tr)
 {
     QTextStream stream(&file);
 
+    stream << ";";
     for(auto& header : _data)
     {
         if(header.first == GIN)
