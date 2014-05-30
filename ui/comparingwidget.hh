@@ -19,6 +19,8 @@ public:
 public slots:
     void show(Map, KeypointCoords, KeypointCoords);
 
+    void block(int en);
+
 signals:
     void log(Log::LogType type, int shift, QString str);
     void compare(QString, QString, int);
@@ -29,6 +31,8 @@ private slots:
 
 private:
     Ui::ComparingWidget *ui;
+
+    int computeType();
 };
 
 #endif // COMPARINGWIDGET_HH

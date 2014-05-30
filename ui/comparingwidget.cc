@@ -23,19 +23,26 @@ void ComparingWidget::show(Map d, KeypointCoords k1, KeypointCoords k2)
 {
     ShowDiffWidget* w = new ShowDiffWidget(k1, k2, d);
     w->open(ui->linePath->text(), ui->linePath2->text());
-
     w->exec();
+}
+
+void ComparingWidget::block(int e)
+{
+    bool en = bool(e);
+    ui->pushCompare->setEnabled(!en);
+    ui->pushOpen->setEnabled(!en);
+    ui->pushOpen2->setEnabled(!en);
 }
 
 void ComparingWidget::startPressed()
 {
-    emit compare(ui->linePath->text(), ui->linePath2->text(), 0);
+    emit compare(ui->linePath->text(), ui->linePath2->text(), /*computeType()*/0);
 }
 
 void ComparingWidget::openPressed()
 {
     QString str = QFileDialog::getOpenFileName(this, "Открыть изображение", "",
-                                               "Images (*.png *.jpg)");
+                                               "Изображения (*.png *.jpg);; Дескрипторы SIFT(*.deskr)");
 
     if(str.isEmpty())
         return;
@@ -44,4 +51,11 @@ void ComparingWidget::openPressed()
         ui->linePath->setText(str);
     else
         ui->linePath2->setText(str);
+}
+
+int ComparingWidget::computeType()
+{
+    int type = QFileInfo(ui->linePath->text()).suffix() == "deskr";
+    type += int(QFileInfo(ui->linePath->text()).suffix() == "deskr") * 2;
+    return type;
 }

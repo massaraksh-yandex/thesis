@@ -1,16 +1,17 @@
 #include <QMetaType>
+#include <QThread>
 #include "mainwindow.hh"
 #include "ui_mainwindow.h"
 
 #include "core.hh"
 
 MainWindow::MainWindow(Core *core, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::MainWindow), _busy(false)
+    QWidget(parent), _core(core),
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    messages = new MessagesWidget(this);
+    messages = new MessagesWidget(core, this);
     layout()->addWidget(messages);
 
     descriptorWidget = new DescriptorWidget(ui->pageComputeDescriptor);
@@ -25,26 +26,38 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     ui->pageCompareImages->layout()->addWidget(comparingWidget);
     ui->pageTestSift->layout()->addWidget(testingWidget);
 
-    connect(testingWidget, SIGNAL(accepted()), SLOT(testAccepted()));
+    connect(core, SIGNAL(running(int)), testingWidget,    SLOT(block(int)));
+    connect(core, SIGNAL(running(int)), descriptorWidget, SLOT(block(int)));
+    connect(core, SIGNAL(running(int)), comparingWidget,  SLOT(block(int)));
+    connect(core, SIGNAL(running(int)), messages,         SLOT(block(int)));
+
+//    connect(messages, SIGNAL(interrupt()), core, SLOT(interrupt()));
+
+    connect(testingWidget, SIGNAL(startTesting(QString,ImageNoises)),
+            core, SLOT(testImages(QString,ImageNoises)));
+    connect(descriptorWidget, SIGNAL(accepted(QString, QString)),
+            core, SLOT(buildDescriptors(QString,QString)));
+    connect(comparingWidget, SIGNAL(compare(QString,QString,int)),
+            core, SLOT(compareImages(QString,QString,int)));
+
+    connect(core, SIGNAL(compareImagesComplete(Map,KeypointCoords,KeypointCoords)),
+            comparingWidget, SLOT(show(Map,KeypointCoords,KeypointCoords)));
+    connect(core, SIGNAL(testimagesComplete(TestingResults)),
+            testingWidget, SLOT(finishTesting(TestingResults)));
 
     connect(ui->toolBox, SIGNAL(currentChanged(int)), SLOT(toolBoxClicked(int)));
 
-    connect(this, SIGNAL(startTesting(QString,ImageNoises)), core, SLOT(testImages(QString,ImageNoises)));
-    connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(core, SIGNAL(progress(int,int)), messages, SLOT(progress(int,int)));
-    connect(core, SIGNAL(testimagesComplete(TestingResults)), testingWidget, SLOT(finishTesting(TestingResults)));
+    connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
-    connect(descriptorWidget, SIGNAL(accepted(QString, QString)), core, SLOT(buildDescriptors(QString,QString)));
-    connect(comparingWidget, SIGNAL(compare(QString,QString,int)), core, SLOT(compareImages(QString,QString,int)));
-    connect(core, SIGNAL(compareImagesComplete(Map,KeypointCoords,KeypointCoords)),
-            comparingWidget, SLOT(show(Map,KeypointCoords,KeypointCoords)));
     resize(440, 480);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    _core->thread()->exit();
 }
 
 void MainWindow::toolBoxClicked(int i)
@@ -64,13 +77,6 @@ void MainWindow::toolBoxClicked(int i)
         break;
     }
     resize(width(), h + messages->height() + 50);
-}
-
-void MainWindow::testAccepted()
-{
-    emit log(Log::Message, 0, "Тестирование начинается");
-
-    emit startTesting(testingWidget->path(), testingWidget->data());
 }
 
 

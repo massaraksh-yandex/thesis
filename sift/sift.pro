@@ -10,8 +10,7 @@ TARGET = sift
 TEMPLATE = lib
 CONFIG += staticlib
 
-QMAKE_CXXFLAGS += -std=c++0x
-
+QMAKE_CXXFLAGS += -Wno-sign-compare -std=c++0x
 
 SOURCES += \
     keypoint.cc \

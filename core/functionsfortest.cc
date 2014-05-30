@@ -110,8 +110,4 @@ void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor& im1Desc,
     {
         res[index] = i;
     }
-    else
-    {
-        qDebug() << "fail";
-    }
 }

@@ -8,14 +8,12 @@ CONFIG += staticlib
 DEPENDPATH += . ../sift
 INCLUDEPATH += ../sift ../spatial/src
 
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -std=c++0x -Wno-sign-compare
 
 SOURCES += core.cc \
-    noise.cc \
     functionsfortest.cc
 
 HEADERS += core.hh \
-    noise.hh \
     global_core.hh \
     functionsfortest.hh \
     logging.hh

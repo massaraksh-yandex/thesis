@@ -17,9 +17,10 @@ DescriptorWidget::~DescriptorWidget()
     delete ui;
 }
 
-void DescriptorWidget::blockStartButton(bool block)
+void DescriptorWidget::block(int block)
 {
-    ui->buttonCompute->setEnabled(block);
+    bool en = bool(block);
+    ui->buttonCompute->setEnabled(!en);
 }
 
 void DescriptorWidget::openClicked()

@@ -17,9 +17,6 @@ public:
     explicit TestingWidget(QWidget *parent = 0);
     ~TestingWidget();
 
-    QList<QPair<ImageNoiseType, double>> data() { return _data; }
-    QString path();
-
 private slots:
     void openFolder();
     void addNoise();
@@ -29,17 +26,17 @@ private slots:
 
 public slots:
     void finishTesting(TestingResults tr);
-    void blockStartButton(bool block);
+    void block(int en);
 
 signals:
     void log(Log::LogType type, int shift, QString str);
-    void accepted();
+    void startTesting(QString, ImageNoises);
 
 private:
     Ui::TestingWidget *ui;
     QFile file;
     QStringList noises;
-    QList<QPair<ImageNoiseType, double>> _data;
+    ImageNoises _data;
 
     void enableMainButton();
 };

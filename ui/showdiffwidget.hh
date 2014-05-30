@@ -13,13 +13,6 @@ class ShowDiffWidget : public QDialog
 {
     Q_OBJECT
 
-    KeypointCoords im1;
-    KeypointCoords im2;
-    Map map;
-
-    QImage image1;
-    QImage image2;
-
 public:
     explicit ShowDiffWidget(KeypointCoords i1, KeypointCoords i2,
                             Map m, QWidget *parent = 0);
@@ -32,6 +25,15 @@ protected:
 
 private:
     Ui::ShowDiffWidget *ui;
+
+    KeypointCoords im1;
+    KeypointCoords im2;
+    Map map;
+
+    int type;
+
+    QImage image1;
+    QImage image2;
 };
 
 #endif // SHOWDIFFWIDGET_HH

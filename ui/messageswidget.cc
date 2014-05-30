@@ -1,11 +1,13 @@
 #include "messageswidget.hh"
 #include "ui_messageswidget.h"
+#include "core.hh"
 
-MessagesWidget::MessagesWidget(QWidget *parent) :
-    QWidget(parent),
+MessagesWidget::MessagesWidget(Core *c, QWidget *parent) :
+    QWidget(parent), wasInterrupted(false), core(c),
     ui(new Ui::MessagesWidget)
 {
     ui->setupUi(this);
+    connect(ui->pushCancel, SIGNAL(clicked()), SLOT(interruptPushed()));
 }
 
 MessagesWidget::~MessagesWidget()
@@ -16,7 +18,7 @@ MessagesWidget::~MessagesWidget()
 void MessagesWidget::log(Log::LogType type, int shift, QString str)
 {
     QString oldText = ui->text->toPlainText();
-    QString text = "\n";
+    QString text = "";
 
     switch(type)
     {
@@ -28,11 +30,31 @@ void MessagesWidget::log(Log::LogType type, int shift, QString str)
     for(int i = 0; i < shift; i++) text += " ";
     text += str;
     ui->text->setPlainText(oldText + text);
+    auto cursor = ui->text->textCursor();
+    ui->text->setTextCursor(cursor);
 }
 
 void MessagesWidget::progress(int val, int max)
 {
     ui->progress->setValue(val);
     ui->progress->setMaximum(max);
+}
+
+void MessagesWidget::block(int r)
+{
+    if(wasInterrupted)
+    {
+        wasInterrupted = false;
+        progress(0, 1);
+    }
+    ui->pushCancel->setEnabled(r);
+}
+
+void MessagesWidget::interruptPushed()
+{
+    core->interrupt();
+    ui->pushCancel->setEnabled(false);
+    wasInterrupted = true;
+    progress(0, 0);
 }
 

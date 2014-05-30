@@ -17,7 +17,7 @@ public:
     ~DescriptorWidget();
 
 public slots:
-    void blockStartButton(bool);
+    void block(int en);
 
 signals:
     void log(Log::LogType type, int shift, QString str);

@@ -28,11 +28,6 @@ TestingWidget::~TestingWidget()
     delete ui;
 }
 
-QString TestingWidget::path()
-{
-    return ui->linePath->text();
-}
-
 void TestingWidget::openFolder()
 {
     QString path = QFileDialog::getExistingDirectory(this);
@@ -61,7 +56,7 @@ void TestingWidget::addNoise()
 
         if(item0->text() == type && item1->data(Qt::DisplayRole).toDouble() == val)
         {
-            emit log(Log::Fail, 0, "Добавляемый шум уже присутствует в списке");
+            emit log(Log::Fail, 0, "Добавляемый шум уже присутствует в списке\n");
             return;
         }
     }
@@ -86,30 +81,32 @@ void TestingWidget::startPressed()
 {
     if(ui->linePath->text().isEmpty())
     {
-        emit log(Log::Fail, 0, "Не задана папка с файлами для тестирования");
+        emit log(Log::Fail, 0, "Не задана папка с файлами для тестирования\n");
     }
     else
     {
         if(ui->tableNoise->rowCount() == 0)
         {
-            emit log(Log::Fail, 0, "Не добавлены шумы для тестирования");
+            emit log(Log::Fail, 0, "Не добавлены шумы для тестирования\n");
         }
         else
         {
             _data.clear();
             for(int i = 0; i < ui->tableNoise->rowCount(); i++)
             {
-                auto item0 = ui->tableNoise->item(i, 0)->text() == noises[0] ?
-                            GIN : SAPIN;
+                auto item0 = ui->tableNoise->item(i, 0)->text() == noises[0] ? GIN : SAPIN;
                 auto item1 = ui->tableNoise->item(i, 1)->data(Qt::DisplayRole).toDouble();
 
                 _data.push_back(qMakePair(item0, item1));
             }
 
             if(!file.isOpen())
-                emit log(Log::Fail, 0, "Не могу открыть файл "+file.fileName());
+                emit log(Log::Fail, 0, "Не могу открыть файл "+file.fileName() + "\n");
             else
-                emit accepted();
+            {
+                emit log(Log::Message, 0, "Тестирование начинается\n");
+                emit startTesting(ui->linePath->text(), _data);
+            }
         }
     }
 }
@@ -155,13 +152,18 @@ void TestingWidget::finishTesting(TestingResults tr)
             stream << d << ";";
         stream << endl;
     }
-    emit log(Log::Message, 0, "Отчёт сохранён в файл " + file.fileName());
+    emit log(Log::Message, 0, "Отчёт сохранён в файл " + file.fileName() + "\n");
     file.close();
 }
 
-void TestingWidget::blockStartButton(bool block)
+void TestingWidget::block(int e)
 {
-    ui->pushStart->setEnabled(block);
+    bool en = bool(e);
+    ui->pushAdd->setEnabled(!en);
+    ui->pushDelete->setEnabled(!en);
+    ui->pushFile->setEnabled(!en);
+    ui->pushOpen->setEnabled(!en);
+    ui->pushStart->setEnabled(!en);
 }
 
 void TestingWidget::enableMainButton()

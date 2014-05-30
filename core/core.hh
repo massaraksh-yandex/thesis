@@ -10,7 +10,6 @@
 
 #include "global_core.hh"
 #include "logging.hh"
-#include "noise.hh"
 #include "sift.hh"
 
 class Core : public QObject
@@ -36,15 +35,11 @@ signals:
     void log(Log::LogType type, int indent, QString message);
     void progress(int value, int maximum);
 
-    void started();
-    void stopped();
+    void running(int);
 
     void compareImagesComplete(Map, KeypointCoords, KeypointCoords);
     void buildDescriptorsComplete();
     void testimagesComplete(TestingResults);
 };
-
-void gaussianImageNoise(CImage& img, double sigma);
-void saltAndPepperNoise(CImage& img, double r);
 
 #endif // CORE_HH

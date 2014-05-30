@@ -72,7 +72,7 @@ void NoiseWidget::buttonPressed()
         reject();
 }
 
-void NoiseWidget::comboChanged(int value)
+void NoiseWidget::comboChanged(int)
 {
     updatePicture();
 }

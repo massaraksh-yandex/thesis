@@ -4,7 +4,6 @@
 
 #include "mainwindow.hh"
 #include "core.hh"
-#include "noise.hh"
 #include "logging.hh"
 
 
@@ -21,7 +20,6 @@ int main(int argc, char *argv[])
     qRegisterMetaType<Map>("Map");
 
     QApplication a(argc, argv);
-
 
     Core* c = new Core(0);
     MainWindow* w = new MainWindow(c, 0);

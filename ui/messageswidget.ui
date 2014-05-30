@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>439</width>
-    <height>242</height>
+    <height>278</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -43,8 +43,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushCancel">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
-        <string>Остановить выполнение</string>
+        <string>Прервать выполнение</string>
        </property>
       </widget>
      </item>
