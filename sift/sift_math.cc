@@ -27,7 +27,6 @@ int kernelSize(double sigma)
     return 2*i-1;
 }
 
-// частичная 3д функция
 void diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
     int x = kp.X;
@@ -91,8 +90,8 @@ bool inverse(Matrix &input, Matrix &inverse)
 int detSign(const permutation_matrix<int> &pm)
 {
     int sign = 1;
-    for(int i = 0; i < pm.size(); ++i)
-        if (i != pm(i))
+    for(uint i = 0; i < pm.size(); ++i)
+        if ((int)i != pm(i))
             sign *= -1;
     return sign;
 }
@@ -113,24 +112,18 @@ double det(Matrix &m)
         else
         {
             double det = 1.0;
-            for(int i = 0; i < m.size1(); i++)
+            for(uint i = 0; i < m.size1(); i++)
                 det *= m(i,i);
             return det * detSign(pm);
         }
     }
 }
 
-double sigma(int x, int y)
+double sigma(int x)
 {
-    static double sigmas[4][5] =
-    {
-        { 1.0*base()*0.5, 1.0*1.0, 1.0*base(), 1.0*2.0, 1.0*base()*2.0 },
-        { 2.0*base()*0.5, 2.0*1.0, 2.0*base(), 2.0*2.0, 2.0*base()*2.0 },
-        { 4.0*base()*0.5, 4.0*1.0, 4.0*base(), 4.0*2.0, 4.0*base()*2.0 },
-        { 8.0*base()*0.5, 8.0*1.0, 8.0*base(), 8.0*2.0, 8.0*base()*2.0 }
-    };
+    static double sigmas[] = {base()*0.5, base(), 2.0*base(), 4.0*base() };
 
-    return sigmas[x][y];
+    return sigmas[x];
 }
 
 }

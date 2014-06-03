@@ -1,16 +1,11 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2014-05-24T16:19:10
-#
-#-------------------------------------------------
-
 QT       -= gui
 
 TARGET = sift
 TEMPLATE = lib
 CONFIG += staticlib
 
-QMAKE_CXXFLAGS += -Wno-sign-compare -std=c++0x
+QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS_WARN_OFF += -Wsign-compare
 
 SOURCES += \
     keypoint.cc \
@@ -30,9 +25,7 @@ unix {
     INSTALLS += target
 }
 # remove possible other optimization flags
-QMAKE_CXXFLAGS_RELEASE -= -O
-QMAKE_CXXFLAGS_RELEASE -= -O1
-QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -O -01 -O2
 
 # add the desired -O3 if not present
 QMAKE_CXXFLAGS_RELEASE *= -O3

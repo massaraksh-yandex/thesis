@@ -13,7 +13,7 @@ namespace Math
     inline constexpr double base() { return sqrt(2.0); }
     inline constexpr double epsilon() { return 0.001; }
 
-    double sigma(int x, int y);
+    double sigma(int x);
     double Gaussian(double x, double y, double sigma);
     double det(Matrix &m);
 

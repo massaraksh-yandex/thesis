@@ -30,8 +30,7 @@ FORMS    += mainwindow.ui \
     comparingwidget.ui \
     messageswidget.ui \
     testingwidget.ui \
-    noisewidget.ui \
-    showdiffwidget.ui
+    noisewidget.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../core/release/ -lcore
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../core/debug/ -lcore

@@ -5,35 +5,43 @@
 #include <QDialog>
 #include "logging.hh"
 
-namespace Ui {
-class ShowDiffWidget;
-}
+class QLabel;
+class QCheckBox;
+class QSlider;
 
 class ShowDiffWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ShowDiffWidget(KeypointCoords i1, KeypointCoords i2,
-                            Map m, QWidget *parent = 0);
+    explicit ShowDiffWidget(KeypointCoords c1, KeypointCoords c2, Map m,
+                            QString file1, QString file2, QWidget *parent);
     ~ShowDiffWidget();
 
-    void open(QString str1, QString str2);
 
 protected:
     void paintEvent(QPaintEvent*);
 
-private:
-    Ui::ShowDiffWidget *ui;
 
-    KeypointCoords im1;
-    KeypointCoords im2;
+private slots:
+    void bordersChanged();
+
+private:
+    void loadImages(QString str1, QString str2);
+    void updateBorders();
+    void updateLabel();
+
+    QLabel* labelImage;
+    QLabel* labelBorders;
+    QCheckBox* checkBox;
+    QSlider* slider;
+
+    QList<KeypointCoords> coords;
+    QList<QImage> images;
     Map map;
 
-    int type;
-
-    QImage image1;
-    QImage image2;
+    int step;
+    QPair<int, int> border;
 };
 
 #endif // SHOWDIFFWIDGET_HH

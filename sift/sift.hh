@@ -11,8 +11,6 @@ class Sift : public QObject
 {
     Q_OBJECT
 
-    cimg_library::CImg<unsigned char> img;
-    SiftData _data;
 public:
     Sift(QObject* obj);
     Sift(QString fileName, QObject* obj);
@@ -44,6 +42,9 @@ private:
 
     double CONTRAST;
     double CORNER;
+
+    cimg_library::CImg<unsigned char> img;
+    SiftData _data;
 };
 
 

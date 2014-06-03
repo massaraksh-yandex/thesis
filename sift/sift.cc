@@ -143,10 +143,10 @@ void Sift::buildPyramidAndDoG()
             sigma *= Math::base();
         }
     }
-    for(int i = 0; i < pyramid.size(); i++)
+    for(uint i = 0; i < pyramid.size(); i++)
     {
         _data.dog.push_back(CImageVec());
-        for(int s = 1; s < pyramid[i].size(); s++)
+        for(uint s = 1; s < pyramid[i].size(); s++)
             _data.dog[i].push_back(pyramid[i][s-1] - pyramid[i][s]);
     }
 }
@@ -269,7 +269,7 @@ void Sift::finishKeypoints()
     for(Keypoint::Cont::value_type& point : _data.points)
     {
         point.neighbourhood.clear();
-        double sigma = Math::sigma(point.octave, 0);
+        double sigma = Math::sigma(point.octave);
         int kernelSize = Math::kernelSize(sigma);
 
         for(int i = 0; i < kernelSize; i++)

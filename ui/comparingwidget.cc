@@ -21,8 +21,9 @@ ComparingWidget::~ComparingWidget()
 
 void ComparingWidget::show(Map d, KeypointCoords k1, KeypointCoords k2)
 {
-    ShowDiffWidget* w = new ShowDiffWidget(k1, k2, d);
-    w->open(ui->linePath->text(), ui->linePath2->text());
+    ShowDiffWidget* w = new ShowDiffWidget(k1, k2, d,
+                                           ui->linePath->text(),
+                                           ui->linePath2->text(), this);
     w->exec();
 }
 
@@ -51,6 +52,9 @@ void ComparingWidget::openPressed()
         ui->linePath->setText(str);
     else
         ui->linePath2->setText(str);
+
+    ui->pushCompare->setEnabled(!ui->linePath->text().isEmpty() &&
+                                !ui->linePath->text().isEmpty());
 }
 
 int ComparingWidget::computeType()

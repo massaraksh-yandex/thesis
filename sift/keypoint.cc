@@ -72,9 +72,9 @@ void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
         points.push_back(qMakePair((int)point.X * fact[point.octave], (int)point.Y * fact[point.octave]));
         Descriptor::value_type& line = descriptors.back();
 
-        for(int x = 0; x < hist.size(); x++)
-            for(int y = 0; y < hist[x].size(); y++)
-                for(int z = 0; z < hist[x][y].size(); z++)
+        for(uint x = 0; x < hist.size(); x++)
+            for(uint y = 0; y < hist[x].size(); y++)
+                for(uint z = 0; z < hist[x][y].size(); z++)
                     line.push_back(hist[x][y][z]);
 
         auto accumSqr = [](double accum, double val) { return accum+val*val; };
