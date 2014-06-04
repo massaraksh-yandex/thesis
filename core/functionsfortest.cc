@@ -35,7 +35,10 @@ double compareDescriptors(DescriptorPtr de, KDTreePtr tree)
         auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
 
         if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
+        {
+            failed++;
             continue;
+        }
 
         QList<double> list = *iter;
         double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
@@ -97,17 +100,17 @@ void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor& im1Desc,
     if(index == -1)
         return;
 
-    double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
+//    double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
-    iter++;
+//    iter++;
 
-    if(iter == spatial::euclidian_neighbor_end(*tr, im2Desc[i]))
-        return;
+//    if(iter == spatial::euclidian_neighbor_end(*tr, im2Desc[i]))
+//        return;
 
-    double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
+//    double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
-    if(std::sqrt(second / first) <= 1.5)
-    {
+//    if(std::sqrt(second / first) <= 1.5)
+//    {
         res[index] = i;
-    }
+//    }
 }

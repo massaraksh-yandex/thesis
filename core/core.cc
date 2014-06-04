@@ -79,6 +79,7 @@ void Core::buildDescriptors(QString image, QString filename)
     }
 
     emit progress(0, 0);
+    emit log(Log::Message, 0, "Построение SIFT-дескрипторов для изображения " + filename);
 
     KeypointCoords coords;
     DescriptorPtr ptr;
@@ -116,7 +117,6 @@ void Core::compareImages(QString im1, QString im2, int types)
     KeypointCoords coords[2];
     Descriptor descr[2];
     QString ims[] = { im1, im2 };
-
 
     QString error;
     std::shared_ptr<Sift> sift(new Sift(0));

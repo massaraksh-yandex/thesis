@@ -121,7 +121,11 @@ void ShowDiffWidget::paintEvent(QPaintEvent *)
         QPoint y(coords[1][index2point].first + images[0].width() + SHIFT,
                  coords[1][index2point].second);
 
-        p.drawLine(y, x);
+        p.drawEllipse(x, 2, 2);
+        p.drawEllipse(y, 2, 2);
+//        p.drawPoint(x);
+//        p.drawPoint(y);
+//        p.drawLine(x, y);
     }
 
     labelImage->setPixmap(pixmap);

@@ -80,9 +80,10 @@ class Sift_testTest : public QObject
 
         DescriptorPtr ptr(new Descriptor());
         auto dd = sift->data();
+        QList<QPair<int, int> > pointsww;
         for(Keypoint& kp : dd.points)
         {
-            buildDescriptor(kp, dd.dog, *ptr);
+            buildDescriptor(kp, dd.dog, *ptr, pointsww);
         }
 
         for(int rr = 0; rr < features.size(); rr++)

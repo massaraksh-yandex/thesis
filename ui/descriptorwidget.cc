@@ -29,6 +29,7 @@ void DescriptorWidget::openClicked()
 
     if(!path.isEmpty())
         ui->lineEdit->setText(path);
+    ui->lineEdit->setDisabled(path.isEmpty());
 }
 
 void DescriptorWidget::computeClicked()
