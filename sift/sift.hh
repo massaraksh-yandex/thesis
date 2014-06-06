@@ -31,12 +31,12 @@ public:
 
     SiftData& data() { return _data; }
 
+//    void interrupt();
 private:
     bool minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
     bool maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
 
     void subpixelExtrema(CImageVec &octave, Keypoint &feature);
-    CImage normalize(const cimg_library::CImg<unsigned char> &img);
     void prepareSigmas();
     int kernelSize(double sigma);
 

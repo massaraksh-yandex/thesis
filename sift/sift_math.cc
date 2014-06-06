@@ -6,6 +6,7 @@
 using namespace boost::numeric::ublas;
 
 namespace Math {
+
 double Gaussian(double x, double y, double s)
 {
     double pi = (2*PI()*s*s);
@@ -16,8 +17,8 @@ double Gaussian(double x, double y, double s)
 
 int kernelSize(double sigma)
 {
-    int maxIters = 20, i;
-    for (i = 0; i < maxIters; i++)
+    int i;
+    for (i = 0; i < 20; i++)
     {
         double top = i*i*-1;
         if ( exp( top / (2.0*sigma*sigma)) < epsilon())
@@ -27,7 +28,7 @@ int kernelSize(double sigma)
     return 2*i-1;
 }
 
-void diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
+void Diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
 {
     int x = kp.X;
     int y = kp.Y;
@@ -69,7 +70,7 @@ void H2x2(const CImage &space, int x, int y, Matrix &out)
             = space(x+1,y+1) + space(x-1,y-1) - space(x+1,y-1) - space(x-1,y+1); // xy
 }
 
-bool inverse(Matrix &input, Matrix &inverse)
+bool MakeInverse(Matrix &input, Matrix &inverse)
 {
     Matrix mat(input);
 
@@ -96,7 +97,7 @@ int detSign(const permutation_matrix<int> &pm)
     return sign;
 }
 
-double det(Matrix &m)
+double Det(Matrix &m)
 {
     if((m.size1() == 2) && (m.size2() == 2))
     {
@@ -119,7 +120,7 @@ double det(Matrix &m)
     }
 }
 
-double sigma(int x)
+double Sigma(int x)
 {
     static double sigmas[] = {base()*0.5, base(), 2.0*base(), 4.0*base() };
 

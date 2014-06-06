@@ -29,8 +29,6 @@ struct Keypoint
     double angle;
 
     Histogram angmag; // гистограмма
-    int direction; // направление в гистограмме
-
 
     Keypoint() {}
 

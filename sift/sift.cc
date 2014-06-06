@@ -70,10 +70,10 @@ void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
                                           H(3,3),
                                           HInverce(3,3);
 
-    Math::diff3(octave, keypoint, D);
+    Math::Diff3(octave, keypoint, D);
     Math::H3x3(octave, keypoint, H);
 
-    if(!Math::inverse(H, HInverce))
+    if(!Math::MakeInverse(H, HInverce))
         return;
 
     // апроксимация Х - субпиксельная позиция
@@ -83,16 +83,6 @@ void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
     keypoint.dx = -shift(0,0);
     keypoint.dy = -shift(1,0);
     keypoint.dz = -shift(2,0);
-}
-
-CImage Sift::normalize(const cimg_library::CImg<unsigned char> &img)
-{
-    CImage out(img);
-    for(int y = 0; y < img.height(); y++)
-        for(int x = 0; x < img.width(); x++)
-            out(x,y) = float(img(x,y)) / 255.0f;
-
-    return out;
 }
 
 Sift::Sift(QObject *obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
@@ -124,10 +114,14 @@ void Sift::load(CImagePtr image)
 void Sift::buildPyramidAndDoG()
 {
     CImageDoG pyramid;
+    QVector<CImage> images;
 
-    QVector<CImage> images; images.reserve(4);
+    CImage newIm(img);
+    for(int y = 0; y < img.height(); y++)
+        for(int x = 0; x < img.width(); x++)
+            newIm(x,y) = float(img(x,y)) / 255.0f;
 
-    images.append(normalize(img).blur(0.5).get_resize(-200, -200, -100, -100, 1).blur(1.0));
+    images.append(newIm.blur(0.5).get_resize(-200, -200, -100, -100, 1).blur(1.0));
     images.append(images[0].get_resize( -50,  -50, -100, -100, 1));
     images.append(images[1].get_resize( -50,  -50, -100, -100, 1));
     images.append(images[2].get_resize( -50,  -50, -100, -100, 1));
@@ -137,10 +131,9 @@ void Sift::buildPyramidAndDoG()
         pyramid.push_back(CImageVec());
         pyramid[i].push_back(images[i]);
         double sigma = Math::base();
-        for(int s = 1; s < 5; s++)
+        for(int s = 1; s < 5; s++, sigma *= Math::base())
         {
             pyramid[i].push_back(pyramid[i][s-1].get_blur(sigma));
-            sigma *= Math::base();
         }
     }
     for(uint i = 0; i < pyramid.size(); i++)
@@ -186,10 +179,10 @@ int Sift::clarifyKeypoints()
     const int MaxIters = 5;
 
     Keypoint::Cont nArray;
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
+    for(Keypoint& kp : _data.points)
     {
-        CImage& img = _data.dog[f_it->octave][f_it->Bl];
-        CImageVec& oct = _data.dog[f_it->octave];
+        CImage& img = _data.dog[kp.octave][kp.Bl];
+        CImageVec& oct = _data.dog[kp.octave];
 
         double maxX = img.width() - 2;
         double maxY = img.height() - 2;
@@ -198,26 +191,26 @@ int Sift::clarifyKeypoints()
 
         for(int it = 0; it < MaxIters; it++)
         {
-            subpixelExtrema(oct, *f_it);
+            subpixelExtrema(oct, kp);
 
             // достаточно близко
-            if((f_it->dx < 0.5) &&
-               (f_it->dy < 0.5) &&
-               (f_it->dz < 0.5))
+            if((kp.dx < 0.5) &&
+               (kp.dy < 0.5) &&
+               (kp.dz < 0.5))
             {
                 isStable = true;
                 break;
             }
 
-            if(f_it->dx >= 0.5)
-                f_it->X += 1;
-            if(f_it->dy >= 0.5)
-                f_it->Y += 1;
-            if(f_it->dz >= 0.5)
-                f_it->Bl += 1;
+            if(kp.dx >= 0.5)
+                kp.X += 1;
+            if(kp.dy >= 0.5)
+                kp.Y += 1;
+            if(kp.dz >= 0.5)
+                kp.Bl += 1;
             // выход за границы
-            if((f_it->X < 1)    || (f_it->Y < 1)    || (f_it->Bl < 1) ||
-               (f_it->X > maxX) || (f_it->Y > maxY) || (f_it->Bl > maxZ))
+            if((kp.X < 1)    || (kp.Y < 1)    || (kp.Bl < 1) ||
+               (kp.X > maxX) || (kp.Y > maxY) || (kp.Bl > maxZ))
             {
                 isStable = false;
                 break;
@@ -225,7 +218,7 @@ int Sift::clarifyKeypoints()
         }
         if(isStable)
         {
-            nArray.push_back(*f_it);
+            nArray.push_back(kp);
         }
     }
     _data.points.swap(nArray);
@@ -238,26 +231,26 @@ int Sift::filterKeypoints()
     boost::numeric::ublas::matrix<double> H(2,2);
     double contrast, tr, det;
     Keypoint::Cont nArray;
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); f_it++)
+    for(Keypoint& kp : _data.points)
     {
-        contrast = _data.dog[f_it->octave][f_it->Bl](f_it->X,f_it->Y);
+        contrast = _data.dog[kp.octave][kp.Bl](kp.X,kp.Y);
         if(qAbs(contrast) >= CONTRAST)
-            nArray.push_back(*f_it);
+            nArray.push_back(kp);
     }
     _data.points.swap(nArray);
     nArray.clear();
 
     // удаляем на рёбрах
-    for(Keypoint::iterator f_it = _data.points.begin(); f_it != _data.points.end(); ++f_it)
+    for(Keypoint& kp : _data.points)
     {
-        Math::H2x2(_data.dog[f_it->octave][f_it->Bl], f_it->X, f_it->Y, H);
+        Math::H2x2(_data.dog[kp.octave][kp.Bl], kp.X, kp.Y, H);
         tr = H(0,0) + H(1,1);
-        det = Math::det(H);
+        det = Math::Det(H);
 
         double value = (tr*tr)/det;
         double corner = (CORNER+1)*(CORNER+1)/CORNER;
         if((det >= 0) && (value <= corner))
-            nArray.push_back(*f_it);
+            nArray.push_back(kp);
     }
     _data.points.swap(nArray);
 
@@ -269,7 +262,7 @@ void Sift::finishKeypoints()
     for(Keypoint::Cont::value_type& point : _data.points)
     {
         point.neighbourhood.clear();
-        double sigma = Math::sigma(point.octave);
+        double sigma = Math::Sigma(point.octave);
         int kernelSize = Math::kernelSize(sigma);
 
         for(int i = 0; i < kernelSize; i++)
@@ -333,14 +326,6 @@ void Sift::formKeypoints()
     clarifyKeypoints();
     filterKeypoints();
     finishKeypoints();
-
-//    QList<QPair<int, int> > out;
-//    out.reserve(_data.points.size());
-
-//    for(Keypoint& kp: _data.points)
-//        out.push_back(qMakePair((int)kp.X, (int)kp.Y));
-
-//    return out;
 }
 
 DescriptorPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)

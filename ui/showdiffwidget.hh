@@ -30,6 +30,7 @@ private:
     void loadImages(QString str1, QString str2);
     void updateBorders();
     void updateLabel();
+    QImage makeGray(QString filename);
 
     QLabel* labelImage;
     QLabel* labelBorders;

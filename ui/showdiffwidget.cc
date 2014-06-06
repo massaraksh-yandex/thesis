@@ -8,6 +8,8 @@
 #include <QSlider>
 #include <QLabel>
 
+#include "../CImg.h"
+
 int const SHIFT = 15;
 
 ShowDiffWidget::ShowDiffWidget(KeypointCoords c1, KeypointCoords c2, Map m,
@@ -54,8 +56,8 @@ ShowDiffWidget::~ShowDiffWidget()
 
 void ShowDiffWidget::loadImages(QString str1, QString str2)
 {
-    images.push_back(QImage(str1).convertToFormat(QImage::Format_Indexed8));
-    images.push_back(QImage(str2).convertToFormat(QImage::Format_Indexed8));
+    images.push_back(makeGray(str1));
+    images.push_back(makeGray(str2));
 
     int w = images[0].width() + images[1].width() + SHIFT;
     int h = std::max(images[0].height(), images[1].height());
@@ -72,7 +74,8 @@ void ShowDiffWidget::updateBorders()
     else
     {
         int value = slider->value();
-        border = qMakePair(value*step, (value+1)*step);
+        int upBorder = std::min((value+1)*step, map.size());
+        border = qMakePair(value*step, upBorder);
     }
 }
 
@@ -88,11 +91,25 @@ void ShowDiffWidget::updateLabel()
     }
     else
     {
-        if(step == 1)
+        if(step == 1 || ((border.second-border.first) == 1))
             labelBorders->setText(formSignle.arg(border.first+1));
         else
             labelBorders->setText(formGeneral.arg(border.first+1).arg(border.second));
     }
+}
+
+QImage ShowDiffWidget::makeGray(QString filename)
+{
+    cimg_library::CImg<unsigned char> image(filename.toStdString().c_str());
+    QImage newImage(image.width(), image.height(), QImage::Format_ARGB32);
+
+    cimg_forXY(image, x, y)
+    {
+        const int value = static_cast<int>( image( x, y, 0 ) );
+        const QRgb c = qRgb( value, value, value );
+        newImage.setPixel( x, y, c );
+    }
+    return newImage;
 }
 
 void ShowDiffWidget::paintEvent(QPaintEvent *)
@@ -103,7 +120,7 @@ void ShowDiffWidget::paintEvent(QPaintEvent *)
     pixmap.fill(Qt::white);
     QPainter p(&pixmap);
 
-    p.drawImage(0, 0, images[0]); // TODO хер знает
+    p.drawImage(0, 0, images[0]);
     p.drawImage(images[0].width() + SHIFT, 0, images[1]);
 
     p.setPen(Qt::red);
@@ -123,9 +140,9 @@ void ShowDiffWidget::paintEvent(QPaintEvent *)
 
         p.drawEllipse(x, 2, 2);
         p.drawEllipse(y, 2, 2);
-//        p.drawPoint(x);
-//        p.drawPoint(y);
-//        p.drawLine(x, y);
+
+        if(!checkBox->isChecked())
+            p.drawLine(x, y);
     }
 
     labelImage->setPixmap(pixmap);

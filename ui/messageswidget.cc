@@ -1,6 +1,7 @@
 #include "messageswidget.hh"
 #include "ui_messageswidget.h"
 #include "core.hh"
+#include <QThread>
 
 MessagesWidget::MessagesWidget(Core *c, QWidget *parent) :
     QWidget(parent), wasInterrupted(false), core(c),
@@ -8,6 +9,7 @@ MessagesWidget::MessagesWidget(Core *c, QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->pushCancel, SIGNAL(clicked()), SLOT(interruptPushed()));
+    connect(ui->pushClear, SIGNAL(clicked()), SLOT(clearPushed()));
 }
 
 MessagesWidget::~MessagesWidget()
@@ -56,5 +58,11 @@ void MessagesWidget::interruptPushed()
     ui->pushCancel->setEnabled(false);
     wasInterrupted = true;
     progress(0, 0);
+    emit log(Log::Message, 0, "Выполнение прервано\n");
+}
+
+void MessagesWidget::clearPushed()
+{
+    ui->text->setPlainText("");
 }
 

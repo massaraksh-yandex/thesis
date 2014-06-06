@@ -111,14 +111,12 @@ void Core::buildDescriptors(QString image, QString filename)
 void Core::compareImages(QString im1, QString im2, int types)
 {
     emit running(true);
-    emit log(Log::Message, 0, "Начало сравнивания изображений...\n");
     _interrupt = false;
 
     KeypointCoords coords[2];
     Descriptor descr[2];
     QString ims[] = { im1, im2 };
 
-    QString error;
     std::shared_ptr<Sift> sift(new Sift(0));
 
     for(int i = 0; i < 2; i++) {
@@ -126,20 +124,12 @@ void Core::compareImages(QString im1, QString im2, int types)
             emit running(false);
             return;
         }
+        emit log(Log::Message, 0,
+                 QString("Построение SIFT-дескрипторов для изображения %1\n").arg(ims[i]));
 
-        if(types & (i+1)) {
-            keypointsFromFile(ims[i], coords[i], descr[i], error);
-            if(!error.isEmpty()) {
-                emit log(Log::Error, 0, error);
-                emit running(false);
-                return;
-            }
-        }
-        else {
-            sift->load(ims[i]);
-            sift->formKeypoints();
-            descr[i] = *sift->computeDescriptors(coords[i]);
-        }
+        sift->load(ims[i]);
+        sift->formKeypoints();
+        descr[i] = *sift->computeDescriptors(coords[i]);
     }
 
     KDTreePtr tree(new KDTree());
@@ -163,8 +153,15 @@ void Core::compareImages(QString im1, QString im2, int types)
         compareTwoImages(i, tree, res, descr[0], descr[1]);
     }
 
+    QString finishMessage = QString("Дескрипторы первого изображения:  %1\n"
+                                    "Дескрипторы второго изображения:  %2\n"
+                                    "Совпавшие дескрипторы: %3").arg(descr[0].size())
+                                    .arg(descr[1].size()).arg(res.size());
+
     emit running(false);
     emit progress(0, 1);
+    emit log(Log::Message, 0, finishMessage);
+
     emit compareImagesComplete(res, coords[0], coords[1]);
 }
 

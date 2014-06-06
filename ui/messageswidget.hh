@@ -23,7 +23,6 @@ public:
 public slots:
     void log(Log::LogType type, int shift, QString str);
     void progress(int val, int max);
-//    void interruptDrone();
     void block(int);
 
 signals:
@@ -31,6 +30,7 @@ signals:
 
 private slots:
     void interruptPushed();
+    void clearPushed();
 
 private:
     Ui::MessagesWidget *ui;
