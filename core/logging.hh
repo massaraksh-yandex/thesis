@@ -21,6 +21,13 @@ enum ImageNoiseType
     SAPIN // соль и перец
 };
 
+struct ImageTestResults
+{
+    double rate;
+    double average;
+    double sigma;
+};
+
 typedef QPair<ImageNoiseType, double> ImageNoisePair;
 typedef QList<ImageNoisePair> ImageNoises;
 
@@ -30,15 +37,15 @@ typedef QMap<int, int> Map;
 struct TestingResult
 {
     QString filename;
-    QList<double> results;
+    QList<ImageTestResults> results;
 
     TestingResult() { }
-    TestingResult(QString name, QList<double> res)
+    TestingResult(QString name, QList<ImageTestResults> res)
         : filename(name), results(res)
     { }
 };
 
-typedef QList<TestingResult> TestingResults;
+typedef QList<TestingResult> TestingResultList;
 
 
 #endif // LOGGING_HH

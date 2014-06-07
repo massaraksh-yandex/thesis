@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<ImageNoises>("ImageNoises");
     qRegisterMetaType<Log::LogType>("Log::LogType");
     qRegisterMetaType<TestingResult>("TestingResult");
-    qRegisterMetaType<TestingResults>("TestingResults");
+    qRegisterMetaType<TestingResultList>("TestingResults");
     qRegisterMetaType<Keypoint::Cont>("Keypoint::Cont");
     qRegisterMetaType<KeypointCoords>("KeypointCoords");
     qRegisterMetaType<Map>("Map");

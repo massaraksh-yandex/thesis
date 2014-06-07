@@ -25,7 +25,7 @@ private slots:
     void setOutputName();
 
 public slots:
-    void finishTesting(TestingResults tr);
+    void finishTesting(TestingResultList tr);
     void block(int en);
 
 signals:

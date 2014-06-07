@@ -130,7 +130,7 @@ void TestingWidget::setOutputName()
     enableMainButton();
 }
 
-void TestingWidget::finishTesting(TestingResults tr)
+void TestingWidget::finishTesting(TestingResultList tr)
 {
     QTextStream stream(&file);
 

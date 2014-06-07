@@ -42,8 +42,8 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
 
     connect(core, SIGNAL(compareImagesComplete(Map,KeypointCoords,KeypointCoords)),
             comparingWidget, SLOT(show(Map,KeypointCoords,KeypointCoords)));
-    connect(core, SIGNAL(testimagesComplete(TestingResults)),
-            testingWidget, SLOT(finishTesting(TestingResults)));
+    connect(core, SIGNAL(testimagesComplete(TestingResultList)),
+            testingWidget, SLOT(finishTesting(TestingResultList)));
 
     connect(ui->toolBox, SIGNAL(currentChanged(int)), SLOT(toolBoxClicked(int)));
 

@@ -20,7 +20,7 @@ DescriptorPtr computeDescriptor(CImagePtr img)
     return out;
 }
 
-double compareDescriptors(DescriptorPtr de, KDTreePtr tree)
+ImageTestResults compareDescriptors(DescriptorPtr de, KDTreePtr tree)
 {
     KDTree& tr = *tree.data();
     Descriptor& d = *de;
