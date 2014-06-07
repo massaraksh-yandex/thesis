@@ -175,7 +175,7 @@ void Core::testImages(QString dirName, ImageNoises types)
     dir.setNameFilters(l);
 
     QFileInfoList files = dir.entryInfoList();
-    TestingResults results;
+    TestingResultList results;
 
     emit progress(0, files.size());
     for(int i = 0; i < files.size(); i++)
@@ -216,7 +216,8 @@ void Core::testImages(QString dirName, ImageNoises types)
                     [sourceDescr](KDTreePtr tree)
             { return compareDescriptors(sourceDescr, tree); };
 
-            QList<ImageTestResults> currentResults = QtConcurrent::blockingMapped<QList<ImageTestResults> >(forest, compareTrees);
+            QList<ImageTestResults> currentResults =
+                    QtConcurrent::blockingMapped<QList<ImageTestResults> >(forest, compareTrees);
             for(KDTreePtr tr : forest) tr.clear();
 
             emit log(Log::Message, 2, QString("Обработка закончена\n"));

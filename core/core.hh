@@ -39,7 +39,7 @@ signals:
 
     void compareImagesComplete(Map, KeypointCoords, KeypointCoords);
     void buildDescriptorsComplete();
-    void testimagesComplete(TestingResults);
+    void testimagesComplete(TestingResultList);
 };
 
 #endif // CORE_HH
