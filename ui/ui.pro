@@ -60,3 +60,5 @@ else:unix: PRE_TARGETDEPS += $$OUT_PWD/../sift/libsift.a
 
 RESOURCES += \
     resources.qrc
+
+unix|win32: LIBS += -lkdtree

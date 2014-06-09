@@ -17,7 +17,7 @@ class MessagesWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit MessagesWidget(Core* c, QWidget *parent = 0);
+    explicit MessagesWidget(QWidget *parent = 0);
     ~MessagesWidget();
 
 public slots:
@@ -36,7 +36,6 @@ private:
     Ui::MessagesWidget *ui;
 
     bool wasInterrupted;
-    Core* core;
 };
 
 #endif // MESSAGESWIDGET_HH

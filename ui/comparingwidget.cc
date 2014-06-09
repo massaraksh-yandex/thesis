@@ -37,7 +37,7 @@ void ComparingWidget::block(int e)
 
 void ComparingWidget::startPressed()
 {
-    emit compare(ui->linePath->text(), ui->linePath2->text(), /*computeType()*/0);
+    emit compare(ui->linePath->text(), ui->linePath2->text());
 }
 
 void ComparingWidget::openPressed()

@@ -23,7 +23,7 @@ public slots:
 
 signals:
     void log(Log::LogType type, int shift, QString str);
-    void compare(QString, QString, int);
+    void compare(QString, QString);
 
 private slots:
     void startPressed();

@@ -40,7 +40,4 @@ struct Keypoint
 };
 
 
-void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                     Descriptor &descriptors, QList<QPair<int, int> > &points);
-
 #endif // KEYPOINT_HH

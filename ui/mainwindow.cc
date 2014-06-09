@@ -6,12 +6,12 @@
 #include "core.hh"
 
 MainWindow::MainWindow(Core *core, QWidget *parent) :
-    QWidget(parent), _core(core),
-    ui(new Ui::MainWindow)
+    QWidget(parent), ui(new Ui::MainWindow),
+    _core(core)
 {
     ui->setupUi(this);
 
-    messages = new MessagesWidget(core, this);
+    messages = new MessagesWidget(this);
     layout()->addWidget(messages);
 
     descriptorWidget = new DescriptorWidget(ui->pageComputeDescriptor);
@@ -31,14 +31,14 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(core, SIGNAL(running(int)), comparingWidget,  SLOT(block(int)));
     connect(core, SIGNAL(running(int)), messages,         SLOT(block(int)));
 
-//    connect(messages, SIGNAL(interrupt()), core, SLOT(interrupt()));
+    connect(messages, SIGNAL(interrupt()), SLOT(interruptCore()));
 
     connect(testingWidget, SIGNAL(startTesting(QString,ImageNoises)),
             core, SLOT(testImages(QString,ImageNoises)));
     connect(descriptorWidget, SIGNAL(accepted(QString, QString)),
             core, SLOT(buildDescriptors(QString,QString)));
-    connect(comparingWidget, SIGNAL(compare(QString,QString,int)),
-            core, SLOT(compareImages(QString,QString,int)));
+    connect(comparingWidget, SIGNAL(compare(QString,QString)),
+            core, SLOT(compareImages(QString,QString)));
 
     connect(core, SIGNAL(compareImagesComplete(Map,KeypointCoords,KeypointCoords)),
             comparingWidget, SLOT(show(Map,KeypointCoords,KeypointCoords)));
@@ -51,7 +51,7 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
-    resize(440, 480);
+    resize(460, 480);
 }
 
 MainWindow::~MainWindow()
@@ -62,7 +62,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::toolBoxClicked(int i)
 {
-    int h;
+    int h = 250;
     switch (i) {
     case 0:
         h = 180;
@@ -73,10 +73,13 @@ void MainWindow::toolBoxClicked(int i)
     case 2:
         h = 320;
         break;
-    default:
-        break;
     }
     resize(width(), h + messages->height() + 50);
+}
+
+void MainWindow::interruptCore()
+{
+    _core->interrupt();
 }
 
 

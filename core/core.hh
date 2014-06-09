@@ -26,7 +26,7 @@ public:
 
 public slots:
     void buildDescriptors(QString image, QString filename);
-    void compareImages(QString im1, QString im2, int types);
+    void compareImages(QString im1, QString im2);
     void testImages(QString dir, ImageNoises types);
 
     void interrupt();

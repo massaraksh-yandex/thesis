@@ -5,10 +5,9 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -std=c++0x
-QMAKE_CXXFLAGS_WARN_OFF += -Wsign-compare
+#QMAKE_CXXFLAGS_WARN_OFF += -Wsign-compare
 
 SOURCES += \
-    keypoint.cc \
     main.cpp \
     sift.cc \
     siftdata.cc \

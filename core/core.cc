@@ -11,9 +11,15 @@
 #include <functional>
 #include <algorithm>
 #include <string>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/moment.hpp>
 
-typedef spatial::point_multiset<128, QList<double> > KDTree;
-typedef QSharedPointer<KDTree > KDTreePtr;
+using namespace boost::accumulators;
+
+//typedef spatial::point_multiset<128, QList<double> > KDTree;
+//typedef QSharedPointer<KDTree > KDTreePtr;
 
 void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& desc, QString& error)
 {
@@ -43,7 +49,7 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& de
 
         coords.push_back(qMakePair(x, y));
 
-        QList<double> lineDouble;
+        QVector<double> lineDouble;
         lineDouble.reserve(lineStr.size() - 2);
         for(int i = 2; i < lineStr.size(); i++)
         {
@@ -108,7 +114,7 @@ void Core::buildDescriptors(QString image, QString filename)
     emit buildDescriptorsComplete();
 }
 
-void Core::compareImages(QString im1, QString im2, int types)
+void Core::compareImages(QString im1, QString im2)
 {
     emit running(true);
     _interrupt = false;
@@ -132,35 +138,37 @@ void Core::compareImages(QString im1, QString im2, int types)
         descr[i] = *sift->computeDescriptors(coords[i]);
     }
 
-    KDTreePtr tree(new KDTree());
+    KDTreePtr tree = kd_create(128);//(new KDTree());
     for(int i = 0; i != descr[0].size(); i++) {
         if(_interrupt) {
             emit running(false);
             return;
         }
-        tree->insert(descr[0][i]);
+        kd_insert(tree, &descr[0][i][0], 0);
     }
 
     emit log(Log::Message, 0, "Сравнение дескрипторов\n");
     Map res;
+    QString finishMessage;
     for(int i = 0; i < descr[1].size(); i++) {
         if(_interrupt) {
-            emit running(false);
-            return;
+            goto END;
         }
 
         emit progress(i, descr[1].size());
         compareTwoImages(i, tree, res, descr[0], descr[1]);
     }
 
-    QString finishMessage = QString("Дескрипторы первого изображения:  %1\n"
+    finishMessage = QString("Дескрипторы первого изображения:  %1\n"
                                     "Дескрипторы второго изображения:  %2\n"
-                                    "Совпавшие дескрипторы: %3").arg(descr[0].size())
+                                    "Совпавшие дескрипторы: %3\n").arg(descr[0].size())
                                     .arg(descr[1].size()).arg(res.size());
 
-    emit running(false);
-    emit progress(0, 1);
     emit log(Log::Message, 0, finishMessage);
+    END:;
+    kd_clear(tree);
+    emit progress(0, 1);
+    emit running(false);
 
     emit compareImagesComplete(res, coords[0], coords[1]);
 }
@@ -176,6 +184,9 @@ void Core::testImages(QString dirName, ImageNoises types)
 
     QFileInfoList files = dir.entryInfoList();
     TestingResultList results;
+    QVector<accumulator_set<double, stats<tag::mean> >> accumRate(types.size()),
+                                                        accumAv(types.size()),
+                                                        accumSigma(types.size());
 
     emit progress(0, files.size());
     for(int i = 0; i < files.size(); i++)
@@ -218,15 +229,15 @@ void Core::testImages(QString dirName, ImageNoises types)
 
             QList<ImageTestResults> currentResults =
                     QtConcurrent::blockingMapped<QList<ImageTestResults> >(forest, compareTrees);
-            for(KDTreePtr tr : forest) tr.clear();
 
             emit log(Log::Message, 2, QString("Обработка закончена\n"));
 
-            TestingResult res;
-            res.filename = fi.fileName();
-            for(double d : currentResults)
-                res.results.push_back(d);
-            results.push_back(res);
+            for(int h = 0; h < currentResults.size(); h++)
+            {
+                accumAv[h](currentResults[h].average);
+                accumRate[h](currentResults[h].rate);
+                accumSigma[h](currentResults[h].sigma);
+            }
         }
         catch(...)
         {
@@ -235,6 +246,17 @@ void Core::testImages(QString dirName, ImageNoises types)
         }
 
         emit progress(i+1, files.size());
+    }
+
+    for(int i = 0; i < accumAv.size(); i++)
+    {
+        ImageTestResults out;
+        out.average = mean(accumAv[i]);
+        out.rate = mean(accumRate[i]);
+        out.sigma = mean(accumSigma[i]);
+
+        results.push_back(out);
+        qDebug() << "out == " << results.back().average << results.back().rate << results.back().sigma;
     }
 
     emit running(false);
@@ -248,8 +270,9 @@ void Core::interrupt()
 
 Q_DECLARE_METATYPE(Keypoint)
 Q_DECLARE_METATYPE(TestingResult)
-Q_DECLARE_METATYPE(TestingResults)
+Q_DECLARE_METATYPE(TestingResultList)
 Q_DECLARE_METATYPE(Log::LogType)
 Q_DECLARE_METATYPE(ImageNoiseType)
 Q_DECLARE_METATYPE(ImageNoisePair)
 Q_DECLARE_METATYPE(ImageNoises)
+Q_DECLARE_METATYPE(ImageTestResults)

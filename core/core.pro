@@ -8,7 +8,7 @@ CONFIG += staticlib
 DEPENDPATH += . ../sift
 INCLUDEPATH += ../sift ../spatial/src
 
-QMAKE_CXXFLAGS += -std=c++0x -Wno-sign-compare
+QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES += core.cc \
     functionsfortest.cc
@@ -42,3 +42,5 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 
 # add the desired -O3 if not present
 QMAKE_CXXFLAGS_RELEASE *= -O3
+
+unix|win32: LIBS += -lkdtree

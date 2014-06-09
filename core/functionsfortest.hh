@@ -5,13 +5,16 @@
 
 #include <functional>
 #include <algorithm>
+#include <kdtree.h>
 
 #include "point_multiset.hpp"
 #include "global_core.hh"
 #include "logging.hh"
 
-typedef spatial::point_multiset<128, QList<double>> KDTree;
-typedef QSharedPointer<KDTree> KDTreePtr;
+//typedef spatial::point_multiset<128, QList<double>> KDTree;
+//typedef QSharedPointer<KDTree> KDTreePtr;
+typedef kdtree KDTree;
+typedef KDTree* KDTreePtr;
 
 DescriptorPtr computeDescriptor(CImagePtr img);
 ImageTestResults compareDescriptors(DescriptorPtr src, KDTreePtr tree);

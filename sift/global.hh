@@ -13,7 +13,7 @@ typedef QSharedPointer<CImage> CImagePtr;
 typedef std::vector<cimg_library::CImg<float> > CImageVec;
 typedef std::vector<std::vector<cimg_library::CImg<float> > > CImageDoG;
 typedef boost::numeric::ublas::matrix<double> Matrix;
-typedef QList<QList<double> > Descriptor;
-typedef QSharedPointer<QList<QList<double> >> DescriptorPtr;
+typedef QList<QVector<double> > Descriptor;
+typedef QSharedPointer<Descriptor> DescriptorPtr;
 
 #endif // GLOBAL_HH

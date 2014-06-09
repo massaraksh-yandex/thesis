@@ -27,6 +27,7 @@ public:
 
 private slots:
     void toolBoxClicked(int);
+    void interruptCore();
 
 signals:
     void log(Log::LogType type, int shift, QString str);

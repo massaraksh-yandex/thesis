@@ -31,8 +31,10 @@ public:
 
     SiftData& data() { return _data; }
 
-//    void interrupt();
 private:
+    void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
+                         Descriptor &descriptors, QList<QPair<int, int> > &points);
+
     bool minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
     bool maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
 

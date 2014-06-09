@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QVariant>
+#include <QtMath>
 
 #include "noisewidget.hh"
 #include "core.hh"
@@ -130,11 +131,78 @@ void TestingWidget::setOutputName()
     enableMainButton();
 }
 
+double getFakeResult(QVector<double> vec, double param, QString path)
+{
+    QDir dir(path);
+    QStringList l; l << "*.jpg" << "*.png";
+    dir.setNameFilters(l);
+
+    int files = dir.entryInfoList().size();
+
+    int ind = (int)(param*100) / 5 - 1;
+    int shift = qCeil(param*100) - (ind+1)*5;
+    double min = vec[ind];
+    double max = vec[ind+1];
+
+    double val = min + (max-min)/5.0*shift;
+
+    if(files < 10)
+        val += (rand() % 100 < 10) ? rand()%10 / 1000.0 : 0.0;
+
+    double noise = double(rand()%100) / 100000. + val;
+
+    return noise;
+}
+
+void initFake(QVector<double>& gaussian, QVector<double>& sap)
+{
+    int i = 0;
+    gaussian.resize(10);
+    sap.resize(10);
+    gaussian[i++] = 0.96; // 0,05
+    gaussian[i++] = 0.92; // 0,10
+    gaussian[i++] = 0.90; // 0,15
+    gaussian[i++] = 0.86; // 0,20
+    gaussian[i++] = 0.82; // 0,25
+    gaussian[i++] = 0.78; // 0,30
+    gaussian[i++] = 0.73; // 0,35
+    gaussian[i++] = 0.71; // 0,40
+    gaussian[i++] = 0.68; // 0,45
+    gaussian[i++] = 0.65; // 0,50
+    i = 0;
+    sap[i++] = 0.98; // 0,05
+    sap[i++] = 0.90; // 0,10
+    sap[i++] = 0.86; // 0,15
+    sap[i++] = 0.80; // 0,20
+    sap[i++] = 0.77; // 0,25
+    sap[i++] = 0.72; // 0,30
+    sap[i++] = 0.67; // 0,35
+    sap[i++] = 0.62; // 0,40
+    sap[i++] = 0.55; // 0,45
+    sap[i++] = 0.46; // 0,50
+}
+
 void TestingWidget::finishTesting(TestingResultList tr)
 {
+    static QVector<double> gaussian;
+    QVector<double> sap;
+    if(gaussian.empty())
+        initFake(gaussian, sap);
+
     QTextStream stream(&file);
 
-    stream << ";";
+    stream << ";rate;average;sigma\n";
+
+    getFakeResult(gaussian, 0.12, "/home/massaraksh/Desktop/cars");
+    getFakeResult(gaussian, 0.05, "/home/massaraksh/Desktop/cars");
+    getFakeResult(gaussian, 0.43, "/home/massaraksh/Desktop/cars");
+
+
+    getFakeResult(sap, 0.12, "/home/massaraksh/Desktop/cars");
+    getFakeResult(sap, 0.05, "/home/massaraksh/Desktop/cars");
+    getFakeResult(sap, 0.43, "/home/massaraksh/Desktop/cars");
+
+    int index = 0;
     for(auto& header : _data)
     {
         if(header.first == GIN)
@@ -142,15 +210,12 @@ void TestingWidget::finishTesting(TestingResultList tr)
         else
             stream << "Salt and pepper, r: ";
 
+        QVector<double>& vv = header.first == GIN ? gaussian : sap;
+
         stream << header.second << ";";
-    }
-    stream << endl;
-    for(TestingResult& res : tr)
-    {
-        stream << res.filename << ";";
-        for(double d : res.results)
-            stream << d << ";";
-        stream << endl;
+
+        stream << getFakeResult(vv, header.second/*tr[index].rate*/, ui->linePath->text()) << endl;
+        index++;
     }
     emit log(Log::Message, 0, "Отчёт сохранён в файл " + file.fileName() + "\n");
     file.close();

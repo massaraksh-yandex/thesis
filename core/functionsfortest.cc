@@ -1,11 +1,17 @@
 #include <QDebug>
 #include "functionsfortest.hh"
 #include "core.hh"
+#include <ctime>
 
 #include "point_multiset.hpp"
 #include "bits/spatial_euclidian_neighbor.hpp"
-
 #include <ctime>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/moment.hpp>
+
+using namespace boost::accumulators;
 
 DescriptorPtr computeDescriptor(CImagePtr img)
 {
@@ -22,43 +28,65 @@ DescriptorPtr computeDescriptor(CImagePtr img)
 
 ImageTestResults compareDescriptors(DescriptorPtr de, KDTreePtr tree)
 {
-    KDTree& tr = *tree.data();
+//    KDTree& tr = *tree;
     Descriptor& d = *de;
-    auto euclidianFn = [](double sum, double el) { return sum + el*el; };
-    int failed = 0;
+    accumulator_set<double, stats<tag::mean, tag::moment<2> > > accum;
 
+    int notFailed = 0, missedFirst = 0,
+        missedSecond = 0, missedCond = 0;
     for(int i = 0; i < d.size(); i++)
     {
         if(i % 100 == 1)
             qDebug() << i << d.size();
 
-        auto iter = spatial::euclidian_neighbor_begin(tr, d[i]);
+        kdres* kdRes = kd_nearest(tree, &d[i][0]);
 
-        if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
+        QVector<double> results(128);
+        QVector<double> secVect;
+
+        int resSize = kd_res_size(kdRes);
+        if(resSize == 1)
+        {            
+            notFailed++;
+            secVect = d[i];
+            kd_res_item(kdRes, &results[0]);
+        }
+        else if(resSize >= 2)
         {
-            failed++;
+            notFailed+=2;
+            secVect.resize(128);
+            kd_res_item(kdRes, &results[0]);
+            kd_res_next(kdRes);
+            kd_res_item(kdRes, &secVect[0]);
+        }
+        else
             continue;
+
+        double first = 0.0, second = 0.0, originalDesc = 0.0;
+        for(int h = 0; h < d[i].size(); h++)
+        {
+            first += results[h]*results[h];
+            second += secVect[h]*secVect[h];
+            originalDesc += d[i][h]*d[i][h];
         }
 
-        QList<double> list = *iter;
-        double first = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
+        kd_res_free(kdRes);
+        double ratio = std::sqrt(second / first);
 
-
-        iter++;
-
-        if(iter == spatial::euclidian_neighbor_end(tr, d[i]))
-            continue;
-
-        list = *iter;
-        double second = std::accumulate(list.begin(), list.end(), 0.0, euclidianFn);
-
-        if(std::sqrt(second / first) <= 1.5)
-            failed++;
+        if(ratio <= 1.15)
+        {
+            accum(std::sqrt(std::abs(originalDesc - first)));
+            notFailed+=2;
+        }
     }
-    double rate = (double)(d.size() - failed) / d.size();
-    tr.clear();
+    qDebug() << missedFirst << "," << notFailed << "," << d.size();
+    ImageTestResults res;
+    res.rate = (double)notFailed / (4*d.size());
+    res.average = mean(accum);
+    res.sigma = std::sqrt(moment<2>(accum));
+    kd_clear(tree);
 
-    return rate;
+    return res;
 }
 
 CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)
@@ -75,10 +103,11 @@ CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)
 
 KDTreePtr buildKDTrees(DescriptorPtr d)
 {
-    KDTreePtr tree(new KDTree());
+    KDTreePtr tree = kd_create(128);
     for(int i = 0; i != d->size(); i++)
     {
-        tree->insert(d->at(i));
+        Descriptor& dd = *d;
+        kd_insert(tree, &dd[i][0], 0);
     }
 
     return tree;
@@ -87,18 +116,34 @@ KDTreePtr buildKDTrees(DescriptorPtr d)
 void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor& im1Desc,
                       Descriptor& im2Desc)
 {
-    auto euclidianFn = [](double sum, double el) { return sum + el*el; };
+//    auto euclidianFn = [](double sum, double el) { return sum + el*el; };
 
+    kdres* kdRes = kd_nearest(tr, &im2Desc[i][0]);
+//    auto iter = spatial::euclidian_neighbor_begin(*tr, im2Desc[i]);
 
-    auto iter = spatial::euclidian_neighbor_begin(*tr, im2Desc[i]);
+    if(kd_res_size(kdRes) < 1)
+        return;
 
     int index = -1;
+    QVector<double> resVec(128);
+    kd_res_item(kdRes, &resVec[0]);
     for(int h = 0; h < im1Desc.size(); h++)
-        if(*iter == im1Desc[h])
+        if(resVec == im1Desc[h])
             index = h;
 
     if(index == -1)
         return;
+
+//    kd_res_next(kdRes);
+//    kd_res_item(kdRes, &resVec[0]);
+    kd_res_free(kdRes);
+
+    double first = 0.0, second = 0.0;
+    for(int h = 0; h < resVec.size(); h++)
+    {
+        first += resVec[h]*resVec[h];
+        second += im2Desc[i][h]*im2Desc[i][h];
+    }
 
 //    double first = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
@@ -109,8 +154,8 @@ void compareTwoImages(int i, KDTreePtr tr, Map &res, Descriptor& im1Desc,
 
 //    double second = std::accumulate(iter->begin(), iter->end(), 0.0, euclidianFn);
 
-//    if(std::sqrt(second / first) <= 1.5)
-//    {
+    if(std::sqrt(second / first) <= 1.5)
+    {
         res[index] = i;
-//    }
+    }
 }

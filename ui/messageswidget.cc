@@ -3,9 +3,9 @@
 #include "core.hh"
 #include <QThread>
 
-MessagesWidget::MessagesWidget(Core *c, QWidget *parent) :
-    QWidget(parent), wasInterrupted(false), core(c),
-    ui(new Ui::MessagesWidget)
+MessagesWidget::MessagesWidget(QWidget *parent) :
+    QWidget(parent), ui(new Ui::MessagesWidget),
+    wasInterrupted(false)
 {
     ui->setupUi(this);
     connect(ui->pushCancel, SIGNAL(clicked()), SLOT(interruptPushed()));
@@ -33,6 +33,7 @@ void MessagesWidget::log(Log::LogType type, int shift, QString str)
     text += str;
     ui->text->setPlainText(oldText + text);
     auto cursor = ui->text->textCursor();
+    cursor.setPosition(ui->text->toPlainText().size());
     ui->text->setTextCursor(cursor);
 }
 
@@ -54,11 +55,11 @@ void MessagesWidget::block(int r)
 
 void MessagesWidget::interruptPushed()
 {
-    core->interrupt();
     ui->pushCancel->setEnabled(false);
     wasInterrupted = true;
     progress(0, 0);
     emit log(Log::Message, 0, "Выполнение прервано\n");
+    emit interrupt();
 }
 
 void MessagesWidget::clearPushed()

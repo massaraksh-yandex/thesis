@@ -45,7 +45,7 @@ struct TestingResult
     { }
 };
 
-typedef QList<TestingResult> TestingResultList;
+typedef QList<ImageTestResults> TestingResultList;
 
 
 #endif // LOGGING_HH
