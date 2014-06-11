@@ -6,9 +6,9 @@ TARGET = core
 TEMPLATE = lib
 CONFIG += staticlib
 DEPENDPATH += . ../sift
-INCLUDEPATH += ../sift ../spatial/src
+INCLUDEPATH += ../sift
 
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -Wno-sign-compare -std=c++0x
 
 SOURCES += core.cc \
     functionsfortest.cc
@@ -22,25 +22,14 @@ unix {
     INSTALLS += target
 }
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sift/release/ -lsift
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sift/debug/ -lsift
-else:unix: LIBS += -L$$OUT_PWD/../sift/ -lsift
-
-INCLUDEPATH += $$PWD/../sift
-DEPENDPATH += $$PWD/../sift
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/release/libsift.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/debug/libsift.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/release/sift.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../sift/debug/sift.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../sift/libsift.a
-
-# remove possible other optimization flags
-QMAKE_CXXFLAGS_RELEASE -= -O
-QMAKE_CXXFLAGS_RELEASE -= -O1
-QMAKE_CXXFLAGS_RELEASE -= -O2
-
-# add the desired -O3 if not present
+QMAKE_CXXFLAGS_RELEASE -= -O -01 -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
-unix|win32: LIBS += -lkdtree
+LIBS += -lkdtree
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../comparator/release/ -lcomparator
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../comparator/debug/ -lcomparator
+else:unix: LIBS += -L$$OUT_PWD/../comparator/ -lcomparator
+
+INCLUDEPATH += $$PWD/../comparator
+DEPENDPATH += $$PWD/../comparator

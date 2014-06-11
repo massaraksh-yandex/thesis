@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "global.hh"
+#include "sift_global.hh"
 #include "siftdata.hh"
 #include "keypoint.hh"
 
@@ -27,13 +27,13 @@ public:
 
     void formKeypoints();
 
-    DescriptorPtr computeDescriptors(QList<QPair<int,int>>& points);
+    DescriptorArrayPtr computeDescriptors(QList<QPair<int,int>>& points);
 
     SiftData& data() { return _data; }
 
 private:
     void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                         Descriptor &descriptors, QList<QPair<int, int> > &points);
+                         DescriptorArray &descriptors, QList<QPair<int, int> > &points);
 
     bool minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
     bool maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);

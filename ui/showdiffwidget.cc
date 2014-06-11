@@ -24,21 +24,24 @@ ShowDiffWidget::ShowDiffWidget(KeypointCoords c1, KeypointCoords c2, Map m,
     slider = new QSlider(Qt::Horizontal, this);
     slider->setMaximum(map.size() / step);
     slider->setDisabled(true);
+    slider->setVisible(false);
 
     labelImage = new QLabel(this);
     labelBorders = new QLabel(this);
+    labelBorders->setVisible(false);
     checkBox = new QCheckBox("Показать все точки", this);
     checkBox->setChecked(true);
+    checkBox->setVisible(false);
 
     QHBoxLayout* hbox = new QHBoxLayout();
-    hbox->addWidget(checkBox);
-    hbox->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Expanding));
-    hbox->addWidget(labelBorders);
-    hbox->addWidget(slider);
+//    hbox->addWidget(checkBox);
+//    hbox->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Expanding));
+//    hbox->addWidget(labelBorders);
+//    hbox->addWidget(slider);
 
     QVBoxLayout* main = new QVBoxLayout();
     main->addWidget(labelImage);
-    main->addLayout(hbox);
+//    main->addLayout(hbox);
 
     setLayout(main);
 

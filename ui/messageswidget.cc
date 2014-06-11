@@ -10,6 +10,7 @@ MessagesWidget::MessagesWidget(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->pushCancel, SIGNAL(clicked()), SLOT(interruptPushed()));
     connect(ui->pushClear, SIGNAL(clicked()), SLOT(clearPushed()));
+    ui->progress->setTextVisible(false);
 }
 
 MessagesWidget::~MessagesWidget()

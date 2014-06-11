@@ -1,6 +1,12 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    ui \
+    sift \
+    comparator \
     core \
-    sift
+    ui
+
+ui.depends = core
+core.depends = sift comparator
+
+CONFIG += ordered

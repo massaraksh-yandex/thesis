@@ -1,7 +1,7 @@
 #ifndef SIFTDATA_HH
 #define SIFTDATA_HH
 
-#include "global.hh"
+#include "sift_global.hh"
 #include "keypoint.hh"
 
 struct SiftData

@@ -1,7 +1,7 @@
 #ifndef KEYPOINT_HH
 #define KEYPOINT_HH
 
-#include "global.hh"
+#include "sift_global.hh"
 
 struct Keypoint
 {

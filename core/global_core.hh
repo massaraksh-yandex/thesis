@@ -3,6 +3,6 @@
 
 #include <QSharedPointer>
 #include "../CImg.h"
-#include "global.hh"
+#include "../global_defines.hh"
 
 #endif // GLOBAL_CORE_HH

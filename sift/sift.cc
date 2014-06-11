@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 bool Sift::minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
     if(img(x-1, y-1) >= pix)
@@ -91,6 +90,7 @@ Sift::Sift(QObject *obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
 
 Sift::Sift(QString fileName, QObject* obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
 {
+    cimg_library::cimg::exception_mode(0);
     img.load(fileName.toStdString().c_str());
 }
 
@@ -328,10 +328,10 @@ void Sift::formKeypoints()
     finishKeypoints();
 }
 
-DescriptorPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)
+DescriptorArrayPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)
 {
     points.clear();
-    DescriptorPtr d(new Descriptor());
+    DescriptorArrayPtr d(new DescriptorArray());
     for(Keypoint kp : _data.points)
     {
         buildDescriptor(kp, _data.dog, *d, points);
@@ -342,7 +342,7 @@ DescriptorPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)
 
 
 void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                           Descriptor &descriptors, QList<QPair<int, int> >& points)
+                           DescriptorArray &descriptors, QList<QPair<int, int> >& points)
 {
     point.neighbourhood.clear();
 
@@ -409,7 +409,7 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
         double fact[] = {0.5, 1.0, 2.0, 4.0};
         points.push_back(qMakePair((int)point.X * fact[point.octave],
                                    (int)point.Y * fact[point.octave]));
-        Descriptor::value_type& line = descriptors.back();
+        DescriptorArray::value_type& line = descriptors.back();
 
         for(uint x = 0; x < hist.size(); x++)
             for(uint y = 0; y < hist[x].size(); y++)

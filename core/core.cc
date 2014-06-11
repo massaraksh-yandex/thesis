@@ -85,7 +85,7 @@ void Core::buildDescriptors(QString image, QString filename)
     }
 
     emit progress(0, 0);
-    emit log(Log::Message, 0, "Построение SIFT-дескрипторов для изображения " + filename);
+    emit log(Log::Message, 0, QString("Построение SIFT-дескрипторов для изображения %1\n").arg(filename));
 
     KeypointCoords coords;
     DescriptorPtr ptr;
@@ -164,10 +164,10 @@ void Core::compareImages(QString im1, QString im2)
                                     "Совпавшие дескрипторы: %3\n").arg(descr[0].size())
                                     .arg(descr[1].size()).arg(res.size());
 
+    emit progress(0, 1);
     emit log(Log::Message, 0, finishMessage);
     END:;
     kd_clear(tree);
-    emit progress(0, 1);
     emit running(false);
 
     emit compareImagesComplete(res, coords[0], coords[1]);
@@ -256,7 +256,7 @@ void Core::testImages(QString dirName, ImageNoises types)
         out.sigma = mean(accumSigma[i]);
 
         results.push_back(out);
-        qDebug() << "out == " << results.back().average << results.back().rate << results.back().sigma;
+//        qDebug() << "out == " << results.back().average << results.back().rate << results.back().sigma;
     }
 
     emit running(false);

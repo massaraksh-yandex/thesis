@@ -51,7 +51,8 @@ MainWindow::MainWindow(Core *core, QWidget *parent) :
     connect(core, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(this, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
     connect(testingWidget, SIGNAL(log(Log::LogType,int,QString)), messages, SLOT(log(Log::LogType,int,QString)));
-    resize(460, 480);
+    resize(360, 480);
+    ui->toolBox->setCurrentIndex(2);
 }
 
 MainWindow::~MainWindow()

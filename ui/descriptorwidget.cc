@@ -29,12 +29,12 @@ void DescriptorWidget::openClicked()
 
     if(!path.isEmpty())
         ui->lineEdit->setText(path);
-    ui->lineEdit->setDisabled(path.isEmpty());
+    ui->buttonCompute->setDisabled(path.isEmpty());
 }
 
 void DescriptorWidget::computeClicked()
 {
-    QString path = QFileDialog::getSaveFileName(this, "Сохранить дескрипторы", "", "*.descr");
+    QString path = QFileDialog::getSaveFileName(this, "Сохранить дескрипторы", "", "Дескрипторы (*.descr)");
     if(!path.isEmpty())
         emit accepted(ui->lineEdit->text(), path);
 }

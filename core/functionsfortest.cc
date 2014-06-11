@@ -3,9 +3,6 @@
 #include "core.hh"
 #include <ctime>
 
-#include "point_multiset.hpp"
-#include "bits/spatial_euclidian_neighbor.hpp"
-#include <ctime>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -13,9 +10,9 @@
 
 using namespace boost::accumulators;
 
-DescriptorPtr computeDescriptor(CImagePtr img)
+DescriptorArrayPtr computeDescriptor(CImagePtr img)
 {
-    DescriptorPtr out(new Descriptor());
+    DescriptorArrayPtr out(new DescriptorArray());
 
     Sift* sift = new Sift(img, 0);
     sift->formKeypoints();
@@ -26,9 +23,8 @@ DescriptorPtr computeDescriptor(CImagePtr img)
     return out;
 }
 
-ImageTestResults compareDescriptors(DescriptorPtr de, KDTreePtr tree)
+ImageTestResults compareDescriptors(DescriptorArrayPtr de, KDTreePtr tree)
 {
-//    KDTree& tr = *tree;
     Descriptor& d = *de;
     accumulator_set<double, stats<tag::mean, tag::moment<2> > > accum;
 
@@ -62,12 +58,11 @@ ImageTestResults compareDescriptors(DescriptorPtr de, KDTreePtr tree)
         else
             continue;
 
-        double first = 0.0, second = 0.0, originalDesc = 0.0;
+        double first = 0.0, second = 0.0;
         for(int h = 0; h < d[i].size(); h++)
         {
             first += results[h]*results[h];
             second += secVect[h]*secVect[h];
-            originalDesc += d[i][h]*d[i][h];
         }
 
         kd_res_free(kdRes);
@@ -75,7 +70,6 @@ ImageTestResults compareDescriptors(DescriptorPtr de, KDTreePtr tree)
 
         if(ratio <= 1.15)
         {
-            accum(std::sqrt(std::abs(originalDesc - first)));
             notFailed+=2;
         }
     }

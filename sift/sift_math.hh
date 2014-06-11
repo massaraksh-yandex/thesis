@@ -1,10 +1,10 @@
-#ifndef _MATH_H_
-#define _MATH_H_
+#ifndef SIFT_MATH_H_
+#define SIFT_MATH_H_
 
 #include <vector>
 #include <map>
 
-#include "global.hh"
+#include "sift_global.hh"
 #include "keypoint.hh"
 
 namespace Math
