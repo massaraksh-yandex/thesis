@@ -23,7 +23,7 @@ DescriptorArrayPtr computeDescriptor(CImagePtr img)
     return out;
 }
 
-ImageTestResults compareDescriptors(DescriptorArrayPtr de, KDTreePtr tree)
+ImageTestResults compareDescriptors(DescriptorArrayPtr de, Tree *tree)
 {
     Descriptor& d = *de;
     accumulator_set<double, stats<tag::mean, tag::moment<2> > > accum;
@@ -95,7 +95,7 @@ CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type)
     return im;
 }
 
-KDTreePtr buildKDTrees(DescriptorPtr d)
+Tree *buildKDTrees(DescriptorPtr d)
 {
     KDTreePtr tree = kd_create(128);
     for(int i = 0; i != d->size(); i++)

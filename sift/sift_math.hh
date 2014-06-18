@@ -5,7 +5,7 @@
 #include <map>
 
 #include "sift_global.hh"
-#include "keypoint.hh"
+#include "siftkeypoint.hh"
 
 namespace Math
 {
@@ -19,8 +19,8 @@ namespace Math
 
     int kernelSize(double Sigma);
 
-    void Diff3(CImageVec &space, const Keypoint& kp, Matrix &diff);
-    void H3x3(const CImageVec &space, Keypoint& kp, Matrix &our);
+    void Diff3(CImageVec &space, const SiftKeypoint& kp, Matrix &diff);
+    void H3x3(const CImageVec &space, SiftKeypoint& kp, Matrix &our);
     void H2x2(const CImage &space, int x, int y, Matrix &out);
 
     bool MakeInverse(Matrix &input, Matrix &inverse);

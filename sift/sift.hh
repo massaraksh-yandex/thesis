@@ -1,53 +1,52 @@
 #ifndef SIFT_HH
 #define SIFT_HH
 
-#include <QObject>
-
 #include "sift_global.hh"
 #include "siftdata.hh"
-#include "keypoint.hh"
+#include "siftkeypoint.hh"
 
-class Sift : public QObject
+class Sift
 {
-    Q_OBJECT
-
-public:
-    Sift(QObject* obj);
-    Sift(QString fileName, QObject* obj);
-    Sift(CImagePtr image, QObject* obj);
-
-    void load(QString str);
-    void load(CImagePtr image);
-
     void buildPyramidAndDoG();
     int computeKeypoints();
     int clarifyKeypoints();
     int filterKeypoints();
     void finishKeypoints();
 
-    void formKeypoints();
-
-    DescriptorArrayPtr computeDescriptors(QList<QPair<int,int>>& points);
-
-    SiftData& data() { return _data; }
-
-private:
-    void buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                         DescriptorArray &descriptors, QList<QPair<int, int> > &points);
+    void buildDescriptor(SiftKeypoint& point, const CImageDoG &DoG,
+                         DescriptorArray &descriptors, KeypointList &points);
 
     bool minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
     bool maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
 
-    void subpixelExtrema(CImageVec &octave, Keypoint &feature);
+    void subpixelExtrema(CImageVec &octave, SiftKeypoint &feature);
     void prepareSigmas();
     int kernelSize(double sigma);
 
     double CONTRAST;
     double CORNER;
 
-    cimg_library::CImg<unsigned char> img;
+    CImageUnsigned img;
     SiftData _data;
+
+public:
+    Sift(CImageUnsigned *image, double contrast, double corner);
+
+    double contrast() const { return CONTRAST; }
+    double corner() const { return CORNER; }
+
+    void computeDescriptors(DescriptorArray& array, KeypointList& points);
 };
+
+extern "C"
+{
+    void SIFT_EXPORT *create(CImageUnsigned* image, double param1, double param2);
+    void SIFT_EXPORT  clear(void* data);
+    void SIFT_EXPORT  build(void* data, DescriptorArray* descriptors, KeypointList* keypoints);
+    void SIFT_EXPORT  getParams(void* data, double* param1, double* param2);
+
+    void SIFT_EXPORT info(LibraryInfo* info);
+}
 
 
 #endif // SIFT_HH

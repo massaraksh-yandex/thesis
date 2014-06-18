@@ -6,7 +6,7 @@
 
 #include "functionsfortest.hh"
 #include "core.hh"
-#include "sift.hh"
+#include "algorithm.hh"
 
 #include <functional>
 #include <algorithm>
@@ -18,10 +18,7 @@
 
 using namespace boost::accumulators;
 
-//typedef spatial::point_multiset<128, QList<double> > KDTree;
-//typedef QSharedPointer<KDTree > KDTreePtr;
-
-void Core::keypointsFromFile(QString str, KeypointCoords& coords, Descriptor& desc, QString& error)
+void Core::keypointsFromFile(QString str, KeypointCoords& coords, DescriptorArray& desc, QString& error)
 {
     QFile file(str);
 
@@ -87,12 +84,11 @@ void Core::buildDescriptors(QString image, QString filename)
     emit progress(0, 0);
     emit log(Log::Message, 0, QString("Построение SIFT-дескрипторов для изображения %1\n").arg(filename));
 
-    KeypointCoords coords;
-    DescriptorPtr ptr;
+    KeypointList coords;
+    DescriptorArray ptr;
 
-    std::shared_ptr<Sift> sift(new Sift(image, 0));
-    sift->formKeypoints();
-    ptr = sift->computeDescriptors(coords);
+    Algorithm sift(image, 0.03, 10.);
+    sift.computeDescriptors(ptr, coords);
 
     QTextStream stream(&file);
     for(int i = 0; i < coords.size(); i++) {
@@ -101,8 +97,8 @@ void Core::buildDescriptors(QString image, QString filename)
             return;
         }
 
-        stream << coords[i].first << "," << coords[i].second << ",";
-        Descriptor::value_type& d = (*ptr)[i];
+        stream << coords[i].x << "," << coords[i].y << ",";
+        DescriptorArray::value_type& d = ptr[i];
         for(int h = 0; h < d.size()-1; h++)
             stream << d[h] << ",";
         stream << d.back() << endl;
@@ -119,32 +115,32 @@ void Core::compareImages(QString im1, QString im2)
     emit running(true);
     _interrupt = false;
 
-    KeypointCoords coords[2];
-    Descriptor descr[2];
+    KeypointList coords[2];
+    DescriptorArray descr[2];
     QString ims[] = { im1, im2 };
 
-    std::shared_ptr<Sift> sift(new Sift(0));
 
     for(int i = 0; i < 2; i++) {
         if(_interrupt) {
             emit running(false);
             return;
         }
+        Algorithm alg(ims[i], 0.03, 10.0);
         emit log(Log::Message, 0,
                  QString("Построение SIFT-дескрипторов для изображения %1\n").arg(ims[i]));
 
-        sift->load(ims[i]);
+        alg.computeDescriptors(descr[i], );
         sift->formKeypoints();
         descr[i] = *sift->computeDescriptors(coords[i]);
     }
 
-    KDTreePtr tree = kd_create(128);//(new KDTree());
+    TreePtr tree(128);
     for(int i = 0; i != descr[0].size(); i++) {
         if(_interrupt) {
             emit running(false);
             return;
         }
-        kd_insert(tree, &descr[0][i][0], 0);
+        tree->push(descr[0][i]);
     }
 
     emit log(Log::Message, 0, "Сравнение дескрипторов\n");

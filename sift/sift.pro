@@ -3,20 +3,22 @@ QT       -= gui
 TARGET = sift
 TEMPLATE = lib
 
-QMAKE_CXXFLAGS += -Wno-sign-compare -std=c++0x
+DEFINES += SIFT_LIBRARY
+
+
+QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES += \
-    main.cpp \
     sift.cc \
     siftdata.cc \
     sift_math.cc
 
 HEADERS += \
-    keypoint.hh \
     sift.hh \
     siftdata.hh \
     sift_math.hh \
-    sift_global.hh
+    sift_global.hh \
+    siftkeypoint.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

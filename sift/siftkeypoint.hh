@@ -1,11 +1,11 @@
-#ifndef KEYPOINT_HH
-#define KEYPOINT_HH
+#ifndef SIFTKEYPOINT_HH
+#define SIFTKEYPOINT_HH
 
 #include "sift_global.hh"
 
-struct Keypoint
+struct SiftKeypoint
 {
-    typedef QList<Keypoint> Cont;
+    typedef QList<SiftKeypoint> Cont;
     typedef std::vector<std::pair<double,double> > Histogram;
     typedef Cont::iterator iterator;
 
@@ -30,9 +30,9 @@ struct Keypoint
 
     Histogram angmag; // гистограмма
 
-    Keypoint() {}
+    SiftKeypoint() {}
 
-    Keypoint(double _x, double _y, double _z, int _o) :
+    SiftKeypoint(double _x, double _y, double _z, int _o) :
         X(_x), Y(_y), Bl(_z), octave(_o)
     { }
 
@@ -40,4 +40,4 @@ struct Keypoint
 };
 
 
-#endif // KEYPOINT_HH
+#endif // SIFTKEYPOINT_HH

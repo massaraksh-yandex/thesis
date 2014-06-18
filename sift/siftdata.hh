@@ -2,12 +2,12 @@
 #define SIFTDATA_HH
 
 #include "sift_global.hh"
-#include "keypoint.hh"
+#include "siftkeypoint.hh"
 
 struct SiftData
 {
     CImageDoG dog;
-    Keypoint::Cont points;
+    SiftKeypoint::Cont points;
 };
 
 #endif // SIFTDATA_HH

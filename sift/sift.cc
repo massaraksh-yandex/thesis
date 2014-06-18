@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -63,7 +64,7 @@ bool Sift::maximumInLayer(const CImage &img, float pix, int x, int y, bool dontC
         return true;
 }
 
-void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
+void Sift::subpixelExtrema(CImageVec &octave, SiftKeypoint &keypoint)
 {
     boost::numeric::ublas::matrix<double> D(3,1),
                                           H(3,3),
@@ -84,32 +85,10 @@ void Sift::subpixelExtrema(CImageVec &octave, Keypoint &keypoint)
     keypoint.dz = -shift(2,0);
 }
 
-Sift::Sift(QObject *obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
-{
-}
 
-Sift::Sift(QString fileName, QObject* obj = 0) : QObject(obj), CONTRAST(0.03), CORNER(10.0)
-{
-    cimg_library::cimg::exception_mode(0);
-    img.load(fileName.toStdString().c_str());
-}
-
-Sift::Sift(CImagePtr image, QObject* obj) : QObject(obj), CONTRAST(0.03), CORNER(10.0), img(*image)
+Sift::Sift(CImageUnsigned *image, double contrast, double corner)
+    : CONTRAST(contrast), CORNER(corner), img(*image)
 { }
-
-void Sift::load(QString str)
-{
-    _data.dog.clear();
-    _data.points.clear();
-    img.load(str.toStdString().c_str());
-}
-
-void Sift::load(CImagePtr image)
-{
-    _data.dog.clear();
-    _data.points.clear();
-    img = *image;
-}
 
 void Sift::buildPyramidAndDoG()
 {
@@ -136,10 +115,10 @@ void Sift::buildPyramidAndDoG()
             pyramid[i].push_back(pyramid[i][s-1].get_blur(sigma));
         }
     }
-    for(uint i = 0; i < pyramid.size(); i++)
+    for(CImageDoG::size_type i = 0; i < pyramid.size(); i++)
     {
         _data.dog.push_back(CImageVec());
-        for(uint s = 1; s < pyramid[i].size(); s++)
+        for(CImageDoG::size_type s = 1; s < pyramid[i].size(); s++)
             _data.dog[i].push_back(pyramid[i][s-1] - pyramid[i][s]);
     }
 }
@@ -147,7 +126,7 @@ void Sift::buildPyramidAndDoG()
 
 int Sift::computeKeypoints()
 {
-    for(size_t i = 0; i < _data.dog.size(); i++)
+    for(CImageDoG::size_type i = 0; i < _data.dog.size(); i++)
     {
         for(size_t s = 1; s < (_data.dog[i].size()-1); s++)
         {
@@ -166,7 +145,7 @@ int Sift::computeKeypoints()
                         max = max && maximumInLayer(_data.dog[i][s+k], px, x, y, k == 0 );
 
                     if(min || max)
-                        _data.points.push_back(Keypoint(x, y, s, i));
+                        _data.points.push_back(SiftKeypoint(x, y, s, i));
                 }
             }
         }
@@ -178,8 +157,8 @@ int Sift::clarifyKeypoints()
 {
     const int MaxIters = 5;
 
-    Keypoint::Cont nArray;
-    for(Keypoint& kp : _data.points)
+    SiftKeypoint::Cont nArray;
+    for(SiftKeypoint& kp : _data.points)
     {
         CImage& img = _data.dog[kp.octave][kp.Bl];
         CImageVec& oct = _data.dog[kp.octave];
@@ -230,8 +209,8 @@ int Sift::filterKeypoints()
     // удаляем низкоконтрастные точки или точки на ребре
     boost::numeric::ublas::matrix<double> H(2,2);
     double contrast, tr, det;
-    Keypoint::Cont nArray;
-    for(Keypoint& kp : _data.points)
+    SiftKeypoint::Cont nArray;
+    for(SiftKeypoint& kp : _data.points)
     {
         contrast = _data.dog[kp.octave][kp.Bl](kp.X,kp.Y);
         if(qAbs(contrast) >= CONTRAST)
@@ -241,7 +220,7 @@ int Sift::filterKeypoints()
     nArray.clear();
 
     // удаляем на рёбрах
-    for(Keypoint& kp : _data.points)
+    for(SiftKeypoint& kp : _data.points)
     {
         Math::H2x2(_data.dog[kp.octave][kp.Bl], kp.X, kp.Y, H);
         tr = H(0,0) + H(1,1);
@@ -259,7 +238,7 @@ int Sift::filterKeypoints()
 
 void Sift::finishKeypoints()
 {
-    for(Keypoint::Cont::value_type& point : _data.points)
+    for(SiftKeypoint::Cont::value_type& point : _data.points)
     {
         point.neighbourhood.clear();
         double sigma = Math::Sigma(point.octave);
@@ -277,12 +256,12 @@ void Sift::finishKeypoints()
                 bool correct = (x <= 0) || (y <= 0) ||
                         (x >= img.width()-1) || (y >= img.height()-1);
                 if(!correct)
-                    point.neighbourhood.push_back(Keypoint(x, y, point.Bl, point.octave));
+                    point.neighbourhood.push_back(SiftKeypoint(x, y, point.Bl, point.octave));
             }
         }
 
         // считаем магнитуды и углы для точек окна
-        for(Keypoint::Cont::value_type& neibour : point.neighbourhood)
+        for(SiftKeypoint::Cont::value_type& neibour : point.neighbourhood)
         {
             CImage& img = _data.dog[neibour.octave][neibour.Bl];
 
@@ -294,8 +273,8 @@ void Sift::finishKeypoints()
         }
 
         // строим гистограмму с 36 бинами
-        Keypoint::VectorDouble hist(36, 0.0);
-        for(Keypoint::Cont::value_type& neibour : point.neighbourhood)
+        SiftKeypoint::VectorDouble hist(36, 0.0);
+        for(SiftKeypoint::Cont::value_type& neibour : point.neighbourhood)
         {
             neibour.angle = 180 + (neibour.angle * 180.0 / Math::PI());	// градусы
             int indX = neibour.angle / 10;
@@ -319,30 +298,28 @@ void Sift::finishKeypoints()
     }
 }
 
-void Sift::formKeypoints()
+void Sift::computeDescriptors(DescriptorArray &array, KeypointList &points)
 {
+    _data.dog.clear();
+    _data.points.clear();
+
     buildPyramidAndDoG();
     computeKeypoints();
     clarifyKeypoints();
     filterKeypoints();
     finishKeypoints();
-}
 
-DescriptorArrayPtr Sift::computeDescriptors(QList<QPair<int, int> > &points)
-{
+    array.clear();
     points.clear();
-    DescriptorArrayPtr d(new DescriptorArray());
-    for(Keypoint kp : _data.points)
+    for(SiftKeypoint kp : _data.points)
     {
-        buildDescriptor(kp, _data.dog, *d, points);
+        buildDescriptor(kp, _data.dog, array, points);
     }
-
-    return d;
 }
 
 
-void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
-                           DescriptorArray &descriptors, QList<QPair<int, int> >& points)
+void Sift::buildDescriptor(SiftKeypoint& point, const CImageDoG &DoG,
+                           DescriptorArray &descriptors, KeypointList& points)
 {
     point.neighbourhood.clear();
 
@@ -358,13 +335,13 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
                  (x >= DoG[point.octave][point.Bl].width()-1) ||
                  (y >= DoG[point.octave][point.Bl].height()-1)))
             {
-                point.neighbourhood.push_back(Keypoint(x, y, point.Bl, point.octave));
+                point.neighbourhood.push_back(SiftKeypoint(x, y, point.Bl, point.octave));
             }
         }
     }
 
     //  Считаем градиенты для окна
-    for(Keypoint& kp : point.neighbourhood)
+    for(SiftKeypoint& kp : point.neighbourhood)
     {
         const CImage& img = DoG[kp.octave][kp.Bl];
         kp.magnitude = sqrt(pow(img(kp.X+1,kp.Y)   - img(kp.X-1,kp.Y),   2.0f)
@@ -375,9 +352,9 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
                          (img(kp.X+1,kp.Y)   - img(kp.X-1,kp.Y)));
     }
 
-    for(Keypoint::Histogram::value_type& peak : point.angmag)
+    for(SiftKeypoint::Histogram::value_type& peak : point.angmag)
     {
-        Keypoint::D3Histogram hist(4, Keypoint::MatrixDouble());
+        SiftKeypoint::D3Histogram hist(4, SiftKeypoint::MatrixDouble());
         for(int i = 0; i < 4; i++)
         {
             hist[i].resize(4);
@@ -385,7 +362,7 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
                 hist[i][h].resize(8);
         }
         // 4x4x8  x y angle
-        for(Keypoint& neib : point.neighbourhood)
+        for(SiftKeypoint& neib : point.neighbourhood)
         {
             neib.angle = 180.0 + (neib.angle * 180.0 / Math::PI());
             neib.angle = peak.first - neib.angle;
@@ -407,8 +384,8 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
         descriptors.push_back(QVector<double>());
 
         double fact[] = {0.5, 1.0, 2.0, 4.0};
-        points.push_back(qMakePair((int)point.X * fact[point.octave],
-                                   (int)point.Y * fact[point.octave]));
+        points.push_back(Keypoint((int)point.X * fact[point.octave],
+                                  (int)point.Y * fact[point.octave]));
         DescriptorArray::value_type& line = descriptors.back();
 
         for(uint x = 0; x < hist.size(); x++)
@@ -426,5 +403,49 @@ void Sift::buildDescriptor(Keypoint& point, const CImageDoG &DoG,
     }
 }
 
+void *create(CImageUnsigned *image, double param1, double param2)
+{
+    if(!image)
+        throw std::invalid_argument("pointer cannot be null");
+    Sift* sift = new Sift(image, param1, param2);
+    return sift;
+}
 
+void clear(void* data)
+{
+    if(!data)
+        throw std::invalid_argument("pointer cannot be null");
 
+    Sift* sift = (Sift*)data;
+    delete sift;
+}
+
+void build(void* data, DescriptorArray* descriptors, KeypointList* keypoints)
+{
+    if(!data || !descriptors || !keypoints)
+        throw std::invalid_argument("pointer cannot be null");
+
+    Sift* sift = (Sift*)data;
+    sift->computeDescriptors(*descriptors, *keypoints);
+}
+
+void getParams(void* data, double* param1, double* param2)
+{
+    if(!data || !param1 || !param2)
+        throw std::invalid_argument("pointer cannot be null");
+
+    Sift* sift = (Sift*)data;
+    *param1 = sift->contrast();
+    *param2 = sift->corner();
+}
+
+void info(LibraryInfo *info)
+{
+    if(!info)
+        throw std::invalid_argument("pointer cannot be null");
+
+    info->info = QObject::tr("Реализация алгоритма SIFT");
+    info->type = LibAlgorithm;
+    info->paramNames.push_back("Contrast");
+    info->paramNames.push_back("Corner");
+}

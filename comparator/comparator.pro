@@ -8,11 +8,11 @@ DEFINES += COMPARATOR_LIBRARY
 INCLUDEPATH += $$PWD/../
 
 SOURCES += \
-    tree.cc
+    kdtreewrapper.cc
 
 HEADERS +=\
         comparator_global.hh \
-    tree.hh
+    kdtreewrapper.hh
 
 unix {
     target.path = /usr/lib

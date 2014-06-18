@@ -1,7 +1,7 @@
 #include <boost/numeric/ublas/lu.hpp>
 
 #include "sift_math.hh"
-#include "keypoint.hh"
+#include "siftkeypoint.hh"
 
 using namespace boost::numeric::ublas;
 
@@ -28,7 +28,7 @@ int kernelSize(double sigma)
     return 2*i-1;
 }
 
-void Diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
+void Diff3(CImageVec &space, const SiftKeypoint& kp, Matrix &diff)
 {
     int x = kp.X;
     int y = kp.Y;
@@ -38,7 +38,7 @@ void Diff3(CImageVec &space, const Keypoint& kp, Matrix &diff)
     diff(2,0) = double(space[z+1](x  ,y  ) - space[z-1](x  ,y  )) / 2.0;
 }
 
-void H3x3(const CImageVec &space, Keypoint& kp, Matrix &our)
+void H3x3(const CImageVec &space, SiftKeypoint& kp, Matrix &our)
 {
     // xx xy xz
     // xy yy yz

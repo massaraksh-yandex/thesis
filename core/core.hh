@@ -10,13 +10,12 @@
 
 #include "global_core.hh"
 #include "logging.hh"
-#include "sift.hh"
 
 class Core : public QObject
 {
     Q_OBJECT
 
-    void keypointsFromFile(QString str, KeypointCoords &coords, Descriptor &desc, QString& error);
+    void keypointsFromFile(QString str, KeypointCoords &coords, DescriptorArray &desc, QString& error);
 
     volatile bool _interrupt;
 
