@@ -128,7 +128,7 @@ int Sift::computeKeypoints()
 {
     for(CImageDoG::size_type i = 0; i < _data.dog.size(); i++)
     {
-        for(size_t s = 1; s < (_data.dog[i].size()-1); s++)
+        for(int s = 1; s < (_data.dog[i].size()-1); s++)
         {
             for(int y = 1; y < (_data.dog[i][s].height()-1); y++)
             {
@@ -403,11 +403,15 @@ void Sift::buildDescriptor(SiftKeypoint& point, const CImageDoG &DoG,
     }
 }
 
-void *create(CImageUnsigned *image, double param1, double param2)
+void *create(CImageUnsigned *image, const VectorDouble *params)
 {
     if(!image)
         throw std::invalid_argument("pointer cannot be null");
-    Sift* sift = new Sift(image, param1, param2);
+
+    if(params->size() != 2)
+        throw std::invalid_argument("size of array must be 2");
+
+    Sift* sift = new Sift(image, params->at(0), params->at(1));
     return sift;
 }
 
@@ -429,14 +433,15 @@ void build(void* data, DescriptorArray* descriptors, KeypointList* keypoints)
     sift->computeDescriptors(*descriptors, *keypoints);
 }
 
-void getParams(void* data, double* param1, double* param2)
+void getParams(void* data, VectorDouble *params)
 {
-    if(!data || !param1 || !param2)
+    if(!data || !params)
         throw std::invalid_argument("pointer cannot be null");
 
     Sift* sift = (Sift*)data;
-    *param1 = sift->contrast();
-    *param2 = sift->corner();
+    params->clear();
+    params->push_back(sift->contrast());
+    params->push_back(sift->corner());
 }
 
 void info(LibraryInfo *info)
@@ -446,6 +451,35 @@ void info(LibraryInfo *info)
 
     info->info = QObject::tr("Реализация алгоритма SIFT");
     info->type = LibAlgorithm;
-    info->paramNames.push_back("Contrast");
-    info->paramNames.push_back("Corner");
+}
+
+
+void getLibraryAPIVersion(QString *version)
+{
+    if(!version)
+        throw std::invalid_argument("pointer cannot be null");
+
+    *version = LibraryAPIVersion();
+}
+
+
+void getDefaultValues(VectorDouble *params)
+{
+    if(!params)
+        throw std::invalid_argument("pointer cannot be null");
+
+    params->clear();
+    params->push_back(0.03);
+    params->push_back(10.0);
+}
+
+
+void getParamNames(QStringList *params)
+{
+    if(!params)
+        throw std::invalid_argument("pointer cannot be null");
+
+    params->clear();
+    params->push_back("Contrast");
+    params->push_back("Corner");
 }

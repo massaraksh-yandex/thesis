@@ -36,7 +36,7 @@ signals:
 
     void running(int);
 
-    void compareImagesComplete(Map, KeypointCoords, KeypointCoords);
+    void compareImagesComplete(Map, KeypointList, KeypointList);
     void buildDescriptorsComplete();
     void testimagesComplete(TestingResultList);
 };

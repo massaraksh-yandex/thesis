@@ -8,38 +8,37 @@
 class LibraryLoader;
 class Algorithm
 {
-public:
-    typedef QVector<double> VectorDouble;
-    typedef QMap<QString, double> ParamMap;
-
-private:
     friend class LibraryLoader;
 
-    typedef void* (*Create)(CImagePtr image, int, double*);
+    typedef void* (*Create)(CImageUnsigned* image, const VectorDouble*);
     typedef void  (*Clear) (void*);
     typedef void  (*Build) (void*, DescriptorArray*, KeypointList*);
-    typedef void  (*GetParams)(void*, int, double*);
+    typedef void  (*GetParams)(void*, VectorDouble*);
+    typedef void  (*GetDefaultValues)(VectorDouble*);
+    typedef void  (*GetParamNames)(QStringList*);
 
     static Create _create;
     static Clear _clear;
     static Build _build;
-    static GetParams _get;
+    static GetParams _getParams;
+    static GetDefaultValues _getDefaultValues;
+    static GetParamNames _getParamNames;
 
     static uint _mutex;
 
     void* _data;
-    int paramSize;
 
 public:
-    Algorithm(CImageUnsigned image, const VectorDouble& vector);
-    Algorithm(QString image, const VectorDouble& vector);
+    Algorithm(CImageUnsigned &image, const VectorDouble& vector);
+    Algorithm(QString image, const VectorDouble &vector);
     ~Algorithm();
 
     double param(uint i) const;
-    ParamMap params() const;
-
     void computeDescriptors(DescriptorArray &ptr, KeypointList &points);
 
+    static QString paramName(uint i);
+
+    static VectorDouble defaultValues();
     static bool haveInstanses() { return _mutex != 0; }
 };
 

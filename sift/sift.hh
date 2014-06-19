@@ -40,12 +40,15 @@ public:
 
 extern "C"
 {
-    void SIFT_EXPORT *create(CImageUnsigned* image, double param1, double param2);
+    void SIFT_EXPORT *create(CImageUnsigned* image, const VectorDouble* params);
     void SIFT_EXPORT  clear(void* data);
     void SIFT_EXPORT  build(void* data, DescriptorArray* descriptors, KeypointList* keypoints);
-    void SIFT_EXPORT  getParams(void* data, double* param1, double* param2);
+    void SIFT_EXPORT  getParams(void* data, VectorDouble* params);
+    void SIFT_EXPORT  getDefaultValues(VectorDouble* params);
+    void SIFT_EXPORT  getParamNames(QStringList* params);
 
     void SIFT_EXPORT info(LibraryInfo* info);
+    void SIFT_EXPORT getLibraryAPIVersion(QString* version);
 }
 
 

@@ -87,7 +87,8 @@ void Core::buildDescriptors(QString image, QString filename)
     KeypointList coords;
     DescriptorArray ptr;
 
-    Algorithm sift(image, 0.03, 10.);
+    VectorDouble defParams = Algorithm::defaultValues();
+    Algorithm sift(image, defParams);
     sift.computeDescriptors(ptr, coords);
 
     QTextStream stream(&file);
@@ -125,16 +126,15 @@ void Core::compareImages(QString im1, QString im2)
             emit running(false);
             return;
         }
-        Algorithm alg(ims[i], 0.03, 10.0);
+        VectorDouble defParams = Algorithm::defaultValues();
+        Algorithm alg(ims[i], defParams);
         emit log(Log::Message, 0,
                  QString("Построение SIFT-дескрипторов для изображения %1\n").arg(ims[i]));
 
-        alg.computeDescriptors(descr[i], );
-        sift->formKeypoints();
-        descr[i] = *sift->computeDescriptors(coords[i]);
+        alg.computeDescriptors(descr[i], coords[i]);
     }
 
-    TreePtr tree(128);
+    TreePtr tree(new Tree(128));
     for(int i = 0; i != descr[0].size(); i++) {
         if(_interrupt) {
             emit running(false);
@@ -151,8 +151,12 @@ void Core::compareImages(QString im1, QString im2)
             goto END;
         }
 
+//        compareTwoImages(i, tree, res, descr[0], descr[1]);
+        if(tree->compareWith(descr[1][i]))
+        {
+//            res[index] = i;
+        }
         emit progress(i, descr[1].size());
-        compareTwoImages(i, tree, res, descr[0], descr[1]);
     }
 
     finishMessage = QString("Дескрипторы первого изображения:  %1\n"
@@ -163,7 +167,6 @@ void Core::compareImages(QString im1, QString im2)
     emit progress(0, 1);
     emit log(Log::Message, 0, finishMessage);
     END:;
-    kd_clear(tree);
     emit running(false);
 
     emit compareImagesComplete(res, coords[0], coords[1]);
@@ -196,31 +199,30 @@ void Core::testImages(QString dirName, ImageNoises types)
         qDebug() << fi.fileName();
         try
         {
-            CImagePtr image(new CImage());
+            CImageUnsignedPtr image(new CImageUnsigned());
             image->load(fi.absoluteFilePath().toStdString().c_str());
             emit log(Log::Message, 0, QString("Файл %1\n").arg(fi.fileName()));
 
-            std::function<CImagePtr(QPair<ImageNoiseType, double>)> buildNoised =
+            std::function<CImageUnsignedPtr(QPair<ImageNoiseType, double>)> buildNoised =
                     [image](QPair<ImageNoiseType, double> type) { return computeNoiseImage(image, type); };
 
-            auto images = QtConcurrent::blockingMapped<QList<CImagePtr> >(types.begin(),
+            auto images = QtConcurrent::blockingMapped<QList<CImageUnsignedPtr> >(types.begin(),
                                                                           types.end(), buildNoised);
             emit log(Log::Message, 2, QString("Созданы изображения с шумами\n"));
 
             images.push_back(image);
 
-            auto descriptors = QtConcurrent::blockingMapped<QList<DescriptorPtr> >(images, computeDescriptor);
+            auto descriptors = QtConcurrent::blockingMapped<QList<DescriptorArrayPtr> >(images, computeDescriptor);
             emit log(Log::Message, 2, QString("Дескрипторы посчитаны\n"));
-            for(CImagePtr p : images) p->clear();
 
-            DescriptorPtr sourceDescr = descriptors.last();
+            DescriptorArrayPtr sourceDescr = descriptors.last();
             descriptors.pop_back();
 
-            auto forest = QtConcurrent::blockingMapped<QList<KDTreePtr> >(descriptors, buildKDTrees);
+            auto forest = QtConcurrent::blockingMapped<QList<TreePtr> >(descriptors, buildKDTrees);
             emit log(Log::Message, 2, QString("К-мерные деревья сформированы\n"));
 
-            std::function<ImageTestResults(KDTreePtr)> compareTrees =
-                    [sourceDescr](KDTreePtr tree)
+            std::function<ImageTestResults(TreePtr)> compareTrees =
+                    [sourceDescr](TreePtr tree)
             { return compareDescriptors(sourceDescr, tree); };
 
             QList<ImageTestResults> currentResults =

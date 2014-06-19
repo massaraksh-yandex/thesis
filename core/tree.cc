@@ -1,10 +1,13 @@
-#include "kdtree.h"
+#include <QStringList>
 #include "tree.hh"
 
 Tree::Create  Tree::_create;
 Tree::Clear   Tree::_clear;
 Tree::Insert  Tree::_insert;
 Tree::Nearest Tree::_nearest;
+Tree::GetDefaultValues Tree::_getDefaultValues;
+Tree::GetParamNames Tree::_getParamNames;
+
 uint Tree::_mutex = 0;
 
 
@@ -20,16 +23,16 @@ Tree::~Tree()
     _mutex--;
 }
 
-void Tree::push(Descriptor vector)
+void Tree::push(Descriptor& vector)
 {
-    _insert(_data, &vector[0]);
+    _insert(_data, &vector);
 }
 
-bool Tree::compareWith(Descriptor descriptor, double threshold)
+bool Tree::compareWith(Descriptor descriptor)
 {
     Descriptor* descriptors[2];
 
-    int resSize = _nearest(_data, &descriptor[0], &(*descriptors[0])[0], &(*descriptors[1])[0]);
+    int resSize = _nearest(_data, &descriptor, descriptors[0], descriptors[1]);
     if(resSize < 2)
         return false;
 
@@ -40,38 +43,24 @@ bool Tree::compareWith(Descriptor descriptor, double threshold)
         second += (*descriptors[1])[h] * (*descriptors[1])[h];
     }
 
-    if(second / first <= threshold)
+    if(second / first <= defaultValues()[0])
         return true;
     else
         return false;
 }
 
-//kdres* kdRes = _nearest(_data, &descriptor[0]);
-//Descriptor* descriptors[2];
+QStringList Tree::paramNames()
+{
+    QStringList p;
+    _getParamNames(&p);
 
-//int resSize = kd_res_size(kdRes);
-//if(resSize >= 2)
-//{
-//    datas[0] = (int*)kd_res_item(kdRes, &(*descriptors[0])[0]);
-//    kd_res_next(kdRes);
-//    datas[1] = (int*)kd_res_item(kdRes, &(*descriptors[1])[0]);
-//}
-//else
-//{
-//    kd_res_free(kdRes);
-//    return false;
-//}
+    return p;
+}
 
-//double first = 0.0, second = 0.0;
-//for(int h = 0; h < descriptor.size(); h++)
-//{
-//    first +=  (*descriptors[0])[h] * (*descriptors[0])[h];
-//    second += (*descriptors[1])[h] * (*descriptors[1])[h];
-//}
+VectorDouble Tree::defaultValues()
+{
+    VectorDouble p;
+    _getDefaultValues(&p);
 
-//kd_res_free(kdRes);
-
-//if(second / first <= threshold)
-//    return true;
-//else
-//    return false;
+    return p;
+}

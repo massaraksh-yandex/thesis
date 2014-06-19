@@ -8,24 +8,20 @@
 
 class LibraryLoader
 {
-public:
-    typedef void (*Info)(QString*, LibraryType*);
-
-private:
     QLibrary _siftLib;
     QLibrary _comparatorLib;
 
     QStringList _paths;
 
-    void initAlgorithm();
-    void initComparator();
+    QString initAlgorithm(bool real);
+    QString initComparator(bool real);
 
 public:
-    LibraryLoader();
+    LibraryLoader(QString searchPath);
 
     bool load(LibraryInfo info);
 
-    LibraryInfoList info() const;
+    LibraryInfoList info();
 
     QStringList path() const { return _paths; }
     void setPath(QStringList list) { _paths = list; }

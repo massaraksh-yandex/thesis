@@ -10,12 +10,12 @@
 #include "logging.hh"
 #include "tree.hh"
 
-DescriptorArrayPtr computeDescriptor(CImagePtr img);
+DescriptorArrayPtr computeDescriptor(CImageUnsignedPtr img);
 ImageTestResults compareDescriptors(DescriptorArrayPtr src, TreePtr tree);
-CImagePtr computeNoiseImage(CImagePtr src, QPair<ImageNoiseType, double> type);
+CImageUnsignedPtr computeNoiseImage(CImageUnsignedPtr src, QPair<ImageNoiseType, double> type);
 TreePtr buildKDTrees(DescriptorArrayPtr d);
 
-void compareTwoImages(int i, TreePtr tr, Map &res, Descriptor &im1Desc, Descriptor& im2Desc);
+void compareTwoImages(int i, TreePtr tr, Map &res, DescriptorArray &im1Desc, DescriptorArray& im2Desc);
 
 
 #endif // FUNCTIONSFORTEST_HH
