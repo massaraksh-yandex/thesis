@@ -1,10 +1,9 @@
 QT       -= gui
 
-TARGET = sift
+TARGET = algorithm-sift
 TEMPLATE = lib
 
 DEFINES += SIFT_LIBRARY
-
 
 QMAKE_CXXFLAGS += -std=c++0x
 

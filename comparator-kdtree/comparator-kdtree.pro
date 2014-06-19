@@ -1,6 +1,6 @@
 QT       -= gui
 
-TARGET = comparator
+TARGET = comparator-kdtree
 TEMPLATE = lib
 
 DEFINES += COMPARATOR_LIBRARY

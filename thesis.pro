@@ -1,12 +1,12 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    sift \
-    comparator \
+    algorithm-sift \
+    comparator-kdtree \
     core \
     ui
 
 ui.depends = core
-core.depends = sift comparator
+core.depends = algorithm-sift comparator-kdtree
 
 CONFIG += ordered

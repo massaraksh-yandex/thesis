@@ -20,7 +20,8 @@ HEADERS += core.hh \
     logging.hh \
     libraryloader.hh \
     tree.hh \
-    algorithm.hh
+    algorithm.hh \
+    imageactions.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
