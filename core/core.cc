@@ -69,17 +69,10 @@ void Core::keypointsFromFile(QString str, KeypointCoords& coords, DescriptorArra
     }
 }
 
-void Core::buildDescriptors(QString image, QString filename)
+void Core::buildDescriptors(BuildDescriptorsData data)
 {
     emit running(true);
     _interrupt = false;
-
-    QFile file(filename);
-    if(!file.open(QFile::Text | QFile::WriteOnly)) {
-        emit log(Log::Error, 0, "Не могу открыть файл " + filename + "\n");
-        emit running(false);
-        return;
-    }
 
     emit progress(0, 0);
     emit log(Log::Message, 0, QString("Построение SIFT-дескрипторов для изображения %1\n").arg(filename));
@@ -88,8 +81,10 @@ void Core::buildDescriptors(QString image, QString filename)
     DescriptorArray ptr;
 
     VectorDouble defParams = Algorithm::defaultValues();
-    Algorithm sift(image, defParams);
-    sift.computeDescriptors(ptr, coords);
+    Algorithm sift(data, defParams);
+
+    if(!_interrupt)
+        sift.execute(ptr, coords);
 
     QTextStream stream(&file);
     for(int i = 0; i < coords.size(); i++) {
@@ -120,53 +115,47 @@ void Core::compareImages(QString im1, QString im2)
     DescriptorArray descr[2];
     QString ims[] = { im1, im2 };
 
-
     for(int i = 0; i < 2; i++) {
-        if(_interrupt) {
-            emit running(false);
-            return;
-        }
+
         VectorDouble defParams = Algorithm::defaultValues();
         Algorithm alg(ims[i], defParams);
         emit log(Log::Message, 0,
                  QString("Построение SIFT-дескрипторов для изображения %1\n").arg(ims[i]));
 
-        alg.computeDescriptors(descr[i], coords[i]);
+        if(!_interrupt)
+            alg.execute(descr[i], coords[i]);
     }
 
     TreePtr tree(new Tree(128));
     for(int i = 0; i != descr[0].size(); i++) {
-        if(_interrupt) {
-            emit running(false);
-            return;
-        }
-        tree->push(descr[0][i]);
+
+        if(!_interrupt)
+            tree->push(descr[0][i]);
     }
 
     emit log(Log::Message, 0, "Сравнение дескрипторов\n");
     Map res;
     QString finishMessage;
     for(int i = 0; i < descr[1].size(); i++) {
-        if(_interrupt) {
-            goto END;
-        }
 
-//        compareTwoImages(i, tree, res, descr[0], descr[1]);
-        if(tree->compareWith(descr[1][i]))
-        {
-//            res[index] = i;
+        if(!_interrupt) {
+            if(tree->compareWith(descr[1][i]))
+            {
+//                res[index] = i;
+            }
+            emit progress(i, descr[1].size());
         }
-        emit progress(i, descr[1].size());
     }
 
-    finishMessage = QString("Дескрипторы первого изображения:  %1\n"
-                                    "Дескрипторы второго изображения:  %2\n"
-                                    "Совпавшие дескрипторы: %3\n").arg(descr[0].size())
-                                    .arg(descr[1].size()).arg(res.size());
+    if(!_interrupt) {
+        finishMessage = QString("Дескрипторы первого изображения:  %1\n"
+                                        "Дескрипторы второго изображения:  %2\n"
+                                        "Совпавшие дескрипторы: %3\n").arg(descr[0].size())
+                                        .arg(descr[1].size()).arg(res.size());
 
+    }
     emit progress(0, 1);
     emit log(Log::Message, 0, finishMessage);
-    END:;
     emit running(false);
 
     emit compareImagesComplete(res, coords[0], coords[1]);
@@ -218,7 +207,7 @@ void Core::testImages(QString dirName, ImageNoises types)
             DescriptorArrayPtr sourceDescr = descriptors.last();
             descriptors.pop_back();
 
-            auto forest = QtConcurrent::blockingMapped<QList<TreePtr> >(descriptors, buildKDTrees);
+            auto forest = QtConcurrent::blockingMapped<QList<TreePtr> >(descriptors, buildKDTree);
             emit log(Log::Message, 2, QString("К-мерные деревья сформированы\n"));
 
             std::function<ImageTestResults(TreePtr)> compareTrees =

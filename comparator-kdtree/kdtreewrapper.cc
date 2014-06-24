@@ -18,16 +18,16 @@ void clear(void* tr)
     kd_clear(tree);
 }
 
-void insert(void* tr, const double* data)
+void insert(void* tr, Keypoint *attach)
 {
-    if(!tr || !data)
+    if(!tr || !attach)
         throw std::invalid_argument("pointer cannot be null");
 
     kdtree* tree = (kdtree*)(tr);
-    kd_insert(tree, data, 0);
+    kd_insert(tree, &((*attach->descriptor)[0]), attach);
 }
 
-int nearest(void* tr, const Descriptor *descriptor, Descriptor *firstNearest, Descriptor *secondNearest)
+int nearest(void* tr, const Descriptor *descriptor, Keypoint *firstNearest, Keypoint *secondNearest)
 {
     if(!tr || !descriptor || !firstNearest || !secondNearest)
         throw std::invalid_argument("pointer cannot be null");
@@ -36,12 +36,18 @@ int nearest(void* tr, const Descriptor *descriptor, Descriptor *firstNearest, De
     kdres* res = kd_nearest(tree, &(*descriptor)[0]);
     int size = kd_res_size(res);
 
-    if(size >= 2)
-    {
-        kd_res_item(res, &(*firstNearest)[0]);
+    if(size >= 2) {
+        double* fItem;
+        double* sItem;
+        firstNearest = (Keypoint*)kd_res_item(res, fItem);
         kd_res_next(res);
-        kd_res_item(res, &(*secondNearest)[0]);
+        secondNearest = kd_res_item(res, sItem);
     }
+    else {
+        firstNearest = 0;
+        secondNearest = 0;
+    }
+
     kd_res_free(res);
 
     return size;

@@ -12,7 +12,8 @@ SOURCES += core.cc \
     functionsfortest.cc \
     libraryloader.cc \
     tree.cc \
-    algorithm.cc
+    algorithm.cc \
+    compareimages.cc
 
 HEADERS += core.hh \
     global_core.hh \
@@ -21,7 +22,8 @@ HEADERS += core.hh \
     libraryloader.hh \
     tree.hh \
     algorithm.hh \
-    imageactions.h
+    imageactions.h \
+    compareimages.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

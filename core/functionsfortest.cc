@@ -17,7 +17,7 @@ DescriptorArrayPtr computeDescriptor(CImageUnsignedPtr img)
     KeypointList kl;
 
     Algorithm algorithm(*img, Algorithm::defaultValues());
-    algorithm.computeDescriptors(*out, kl);
+    algorithm.execute(*out, kl);
 
     return out;
 }
@@ -94,7 +94,7 @@ CImageUnsignedPtr computeNoiseImage(CImageUnsignedPtr src, QPair<ImageNoiseType,
     return im;
 }
 
-TreePtr buildKDTrees(DescriptorArrayPtr d)
+TreePtr buildKDTree(DescriptorArrayPtr d)
 {
     TreePtr tree(new Tree(128));
     for(int i = 0; i != d->size(); i++)

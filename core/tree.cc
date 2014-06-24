@@ -1,5 +1,6 @@
 #include <QStringList>
 #include "tree.hh"
+#include <cmath>
 
 Tree::Create  Tree::_create;
 Tree::Clear   Tree::_clear;
@@ -28,23 +29,25 @@ void Tree::push(Descriptor& vector)
     _insert(_data, &vector);
 }
 
-bool Tree::compareWith(Descriptor descriptor)
+bool Tree::compareWith(const Descriptor &d, Keypoint& point)
 {
-    Descriptor* descriptors[2];
+    Keypoint* points[2];
 
-    int resSize = _nearest(_data, &descriptor, descriptors[0], descriptors[1]);
+    int resSize = _nearest(_data, &d, points[0], points[1]);
     if(resSize < 2)
         return false;
 
     double first = 0.0, second = 0.0;
-    for(int h = 0; h < descriptor.size(); h++)
+    for(int h = 0; h < d.size(); h++)
     {
-        first +=  (*descriptors[0])[h] * (*descriptors[0])[h];
-        second += (*descriptors[1])[h] * (*descriptors[1])[h];
+        first +=  std::pow((*points[0]->descriptor)[h], 2.0);
+        second += std::pow((*points[1]->descriptor)[h], 2.0);
     }
 
-    if(second / first <= defaultValues()[0])
+    if(second / first <= defaultValues()[0]) {
+        point = *points[0];
         return true;
+    }
     else
         return false;
 }

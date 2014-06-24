@@ -13,8 +13,9 @@ class Tree
 
     typedef void* (*Create)  (unsigned);
     typedef void  (*Clear)   (void*);
-    typedef void  (*Insert)  (void*, Descriptor*);
-    typedef int   (*Nearest) (void*, const Descriptor*, Descriptor*, Descriptor*);
+    typedef void  (*Insert)  (void*, Keypoint*);
+    typedef int   (*Nearest) (void*, const Descriptor *descriptor,
+                              Keypoint* firstNearest, Keypoint* secondNearest);
     typedef void  (*GetDefaultValues)(VectorDouble*);
     typedef void  (*GetParamNames)(QStringList*);
 
@@ -34,12 +35,19 @@ public:
     ~Tree();
 
     void push(Descriptor &vector);
-    bool compareWith(Descriptor descriptor);
+    bool compareWith(const Descriptor& d, Keypoint& point);
 
     static QStringList paramNames();
     static VectorDouble defaultValues();
 
     static bool haveInstances() { return _mutex != 0; }
+};
+
+class TreeBuilder : public QObject
+{
+    Q_OBJECT
+
+
 };
 
 typedef QSharedPointer<Tree> TreePtr;

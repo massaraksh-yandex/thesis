@@ -10,9 +10,9 @@ extern "C"
 {
     void COMPARATORSHARED_EXPORT *create (unsigned size);
     void COMPARATORSHARED_EXPORT  clear  (void* tree);
-    void COMPARATORSHARED_EXPORT  insert (void* tree, const double *data);
+    void COMPARATORSHARED_EXPORT  insert (void* tree, Keypoint* attach);
     int  COMPARATORSHARED_EXPORT  nearest(void*, const Descriptor *descriptor,
-                                          Descriptor* firstNearest, Descriptor* secondNearest);
+                                          Keypoint* firstNearest, Keypoint* secondNearest);
 
     void COMPARATORSHARED_EXPORT  getDefaultValues(VectorDouble* params);
     void COMPARATORSHARED_EXPORT  getParamNames(QStringList* params);

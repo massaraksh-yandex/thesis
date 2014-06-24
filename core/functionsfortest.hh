@@ -13,7 +13,7 @@
 DescriptorArrayPtr computeDescriptor(CImageUnsignedPtr img);
 ImageTestResults compareDescriptors(DescriptorArrayPtr src, TreePtr tree);
 CImageUnsignedPtr computeNoiseImage(CImageUnsignedPtr src, QPair<ImageNoiseType, double> type);
-TreePtr buildKDTrees(DescriptorArrayPtr d);
+TreePtr buildKDTree(DescriptorArrayPtr d);
 
 void compareTwoImages(int i, TreePtr tr, Map &res, DescriptorArray &im1Desc, DescriptorArray& im2Desc);
 

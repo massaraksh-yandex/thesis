@@ -9,7 +9,23 @@
 #include <QVector>
 
 #include "global_core.hh"
+#include "imageactions.h"
 #include "logging.hh"
+#include "compareimages.hh"
+
+class QTextStream;
+struct BuildDescriptorsData
+{
+    CImageUnsignedPtr image;
+    QTextStream* stream;
+};
+
+struct TestImagesData
+{
+    ImageActionList actions;
+    QString path;
+    QStringList extencions;
+};
 
 class Core : public QObject
 {
@@ -24,7 +40,7 @@ public:
     { }
 
 public slots:
-    void buildDescriptors(QString image, QString filename);
+    void buildDescriptors(BuildDescriptorsData data);
     void compareImages(QString im1, QString im2);
     void testImages(QString dir, ImageNoises types);
 
