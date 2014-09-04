@@ -7,8 +7,44 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <macros.hh>
+#include "siftdata.hh"
+#include "siftkeypoint.hh"
 
 using namespace std;
+
+class Sift
+{
+    void buildPyramidAndDoG();
+    int computeKeypoints();
+    int clarifyKeypoints();
+    int filterKeypoints();
+    void finishKeypoints();
+
+    void buildDescriptor(SiftKeypoint& point, const CImageDoG &DoG,
+                         DescriptorArray &descriptors, KeypointList &points);
+
+    bool minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
+    bool maximumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY);
+
+    void subpixelExtrema(CImageVec &octave, SiftKeypoint &feature);
+    void prepareSigmas();
+    int kernelSize(double sigma);
+
+    double CONTRAST;
+    double CORNER;
+
+    CImageUnsigned _img;
+    SiftData _data;
+
+public:
+    Sift(CImageUnsigned *image, double contrast, double corner);
+
+    double contrast() const { return CONTRAST; }
+    double corner() const { return CORNER; }
+
+    void computeDescriptors(DescriptorArray& array, KeypointList& points);
+};
 
 bool Sift::minimumInLayer(const CImage &img, float pix, int x, int y, bool dontCheckXY)
 {
@@ -87,7 +123,7 @@ void Sift::subpixelExtrema(CImageVec &octave, SiftKeypoint &keypoint)
 
 
 Sift::Sift(CImageUnsigned *image, double contrast, double corner)
-    : CONTRAST(contrast), CORNER(corner), img(*image)
+    : CONTRAST(contrast), CORNER(corner), _img(*image)
 { }
 
 void Sift::buildPyramidAndDoG()
@@ -95,10 +131,10 @@ void Sift::buildPyramidAndDoG()
     CImageDoG pyramid;
     QVector<CImage> images;
 
-    CImage newIm(img);
-    for(int y = 0; y < img.height(); y++)
-        for(int x = 0; x < img.width(); x++)
-            newIm(x,y) = float(img(x,y)) / 255.0f;
+    CImage newIm(_img);
+    for(int y = 0; y < _img.height(); y++)
+        for(int x = 0; x < _img.width(); x++)
+            newIm(x,y) = float(_img(x,y)) / 255.0f;
 
     images.append(newIm.blur(0.5).get_resize(-200, -200, -100, -100, 1).blur(1.0));
     images.append(images[0].get_resize( -50,  -50, -100, -100, 1));
@@ -405,8 +441,7 @@ void Sift::buildDescriptor(SiftKeypoint& point, const CImageDoG &DoG,
 
 void *create(CImageUnsigned *image, const VectorDouble *params)
 {
-    if(!image)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(image)
 
     if(params->size() != 2)
         throw std::invalid_argument("size of array must be 2");
@@ -417,8 +452,7 @@ void *create(CImageUnsigned *image, const VectorDouble *params)
 
 void clear(void* data)
 {
-    if(!data)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(data);
 
     Sift* sift = (Sift*)data;
     delete sift;
@@ -426,8 +460,9 @@ void clear(void* data)
 
 void build(void* data, DescriptorArray* descriptors, KeypointList* keypoints)
 {
-    if(!data || !descriptors || !keypoints)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(data);
+    ASERT_NOT_NULL(descriptors);
+    ASERT_NOT_NULL(keypoints);
 
     Sift* sift = (Sift*)data;
     sift->computeDescriptors(*descriptors, *keypoints);
@@ -435,8 +470,8 @@ void build(void* data, DescriptorArray* descriptors, KeypointList* keypoints)
 
 void getParams(void* data, VectorDouble *params)
 {
-    if(!data || !params)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(data);
+    ASERT_NOT_NULL(params);
 
     Sift* sift = (Sift*)data;
     params->clear();
@@ -444,29 +479,9 @@ void getParams(void* data, VectorDouble *params)
     params->push_back(sift->corner());
 }
 
-void info(LibraryInfo *info)
-{
-    if(!info)
-        throw std::invalid_argument("pointer cannot be null");
-
-    info->info = QObject::tr("Реализация алгоритма SIFT");
-    info->type = LibAlgorithm;
-}
-
-
-void getLibraryAPIVersion(QString *version)
-{
-    if(!version)
-        throw std::invalid_argument("pointer cannot be null");
-
-    *version = LibraryAPIVersion();
-}
-
-
 void getDefaultValues(VectorDouble *params)
 {
-    if(!params)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(params);
 
     params->clear();
     params->push_back(0.03);
@@ -476,10 +491,44 @@ void getDefaultValues(VectorDouble *params)
 
 void getParamNames(QStringList *params)
 {
-    if(!params)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(params);
 
     params->clear();
     params->push_back("Contrast");
     params->push_back("Corner");
+}
+
+class SingleInitKdTreeInfo : public SingleInit<LibraryInfo>
+{
+public:
+    SingleInitKdTreeInfo() : SingleInit<LibraryInfo>() {
+        _instance.info = QObject::tr("Реализация алгоритма SIFT");
+        _instance.type = Algorithm;
+    }
+};
+
+class SingleInitKdTreeApi : public SingleInit<ApiAlgorithm>
+{
+public:
+    SingleInitKdTreeApi() : SingleInit<ApiAlgorithm>() {
+        _instance.build = &build;
+        _instance.clear = &clear;
+        _instance.create = &create;
+        _instance.getDefaultValues = &getDefaultValues;
+        _instance.getParamNames = &getParamNames;
+        _instance.getParams = &getParams;
+        _instance.version = API_VERSION;
+    }
+};
+
+const LibraryInfo *info()
+{
+    static SingleInitKdTreeInfo si;
+    return si.instance();
+}
+
+const ApiAlgorithm *getApi()
+{
+    static SingleInitKdTreeApi si;
+    return si.instance();
 }

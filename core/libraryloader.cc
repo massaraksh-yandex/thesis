@@ -31,8 +31,8 @@ QString LibraryLoader::initAlgorithm(bool real)
 
     if(real)
     {
-        Algorithm::_create           = f1;
-        Algorithm::_clear            = f2;
+        Algorithm::api->create           = f1;
+        Algorithm::api->clear            = f2;
         Algorithm::_build            = f3;
         Algorithm::_getParams        = f4;
         Algorithm::_getDefaultValues = f5;
@@ -96,6 +96,7 @@ bool LibraryLoader::load(LibraryInfo info)
             return false;
 
         initComparator(true);
+
     } else if(info.type == LibAlgorithm) {
         if(Algorithm::haveInstanses())
             throw std::logic_error("Cannot load library now: Almgorith instances are using");
@@ -105,6 +106,7 @@ bool LibraryLoader::load(LibraryInfo info)
         if(!_siftLib.load())
             return false;
 
+        Algorithm::api =
         initAlgorithm(true);
     }
 

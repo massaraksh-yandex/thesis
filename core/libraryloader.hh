@@ -4,7 +4,7 @@
 #include <QLibrary>
 #include <QString>
 #include <QList>
-#include "../global_defines.hh"
+#include "include/global_defines.hh"
 
 class LibraryLoader
 {
@@ -12,9 +12,6 @@ class LibraryLoader
     QLibrary _comparatorLib;
 
     QStringList _paths;
-
-    QString initAlgorithm(bool real);
-    QString initComparator(bool real);
 
 public:
     LibraryLoader(QString searchPath);

@@ -7,6 +7,8 @@ DEFINES += SIFT_LIBRARY
 
 QMAKE_CXXFLAGS += -std=c++0x
 
+INCLUDEPATH += /usr/include/c++/4.8/ ../core/include/ /usr/include
+
 SOURCES += \
     sift.cc \
     siftdata.cc \

@@ -5,7 +5,7 @@
 #include <QSharedPointer>
 #include <QList>
 
-#include "../global_defines.hh"
+#include "global_defines.hh"
 #include "../CImg.h"
 
 #include <boost/numeric/ublas/matrix.hpp>

@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "global_core.hh"
+#include "global_defines.hh"
 #include "logging.hh"
 #include "tree.hh"
 

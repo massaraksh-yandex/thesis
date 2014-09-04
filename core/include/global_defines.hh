@@ -1,10 +1,10 @@
-#ifndef GLOBAL_DEFINES_HH
-#define GLOBAL_DEFINES_HH
+#pragma once
 
 #include <QSharedPointer>
 #include <QVector>
 #include <QList>
 #include "../CImg.h"
+#include "libraryinfo.hh"
 
 typedef QVector<double> Descriptor;
 typedef QList<Descriptor> DescriptorArray;
@@ -27,28 +27,18 @@ struct Keypoint
 };
 typedef QList<Keypoint> KeypointList;
 
-enum LibraryType
-{
-    LibraryUnknown,
-    LibAlgorithm,
-    LibComparator
-};
-
-struct LibraryInfo
-{
-    QString path;
-    LibraryType type;
-    QString info;
-    QString statusMessage;
-    bool valid;
-
-    LibraryInfo() : type(LibraryUnknown), valid(false) { }
-};
-typedef QList<LibraryInfo> LibraryInfoList;
-
 inline QString LibraryAPIVersion() { return QString("0"); }
 typedef void (*GetLibraryAPIVersion)(QString*);
 typedef void (*LibraryInfoFunc)(LibraryInfo*);
 
+template<class Instance>
+class SingleInit
+{
+protected:
+    Instance _instance;
+public:
+    SingleInit() { }
+    virtual ~SingleInit() { }
+    const Instance* instance() const { return &_instance; }
+};
 
-#endif

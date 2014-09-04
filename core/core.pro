@@ -8,6 +8,9 @@ CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -std=c++0x
 
+INCLUDEPATH +=/usr/include/c++/4.8/ $$PWD/include/
+
+
 SOURCES += core.cc \
     functionsfortest.cc \
     libraryloader.cc \
@@ -23,7 +26,11 @@ HEADERS += core.hh \
     tree.hh \
     algorithm.hh \
     imageactions.h \
-    compareimages.hh
+    compareimages.hh \
+    include/macros.hh \
+    include/global_defines.hh \
+    include/api.hh \
+    include/libraryinfo.hh
 unix {
     target.path = /usr/lib
     INSTALLS += target

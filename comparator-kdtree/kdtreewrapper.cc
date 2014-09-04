@@ -2,6 +2,8 @@
 #include "kdtree.h"
 #include "kdtreewrapper.hh"
 #include <stdexcept>
+#include "global_defines.hh"
+#include "macros.hh"
 
 void *create(unsigned size)
 {
@@ -11,8 +13,7 @@ void *create(unsigned size)
 
 void clear(void* tr)
 {
-    if(!tr)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(tr);
 
     kdtree* tree = (kdtree*)(tr);
     kd_clear(tree);
@@ -20,8 +21,8 @@ void clear(void* tr)
 
 void insert(void* tr, Keypoint *attach)
 {
-    if(!tr || !attach)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(tr);
+    ASERT_NOT_NULL(attach);
 
     kdtree* tree = (kdtree*)(tr);
     kd_insert(tree, &((*attach->descriptor)[0]), attach);
@@ -29,19 +30,21 @@ void insert(void* tr, Keypoint *attach)
 
 int nearest(void* tr, const Descriptor *descriptor, Keypoint *firstNearest, Keypoint *secondNearest)
 {
-    if(!tr || !descriptor || !firstNearest || !secondNearest)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(tr);
+    ASERT_NOT_NULL(descriptor);
+    ASERT_NOT_NULL(firstNearest);
+    ASERT_NOT_NULL(secondNearest);
 
     kdtree* tree = (kdtree*)(tr);
     kdres* res = kd_nearest(tree, &(*descriptor)[0]);
     int size = kd_res_size(res);
 
     if(size >= 2) {
-        double* fItem;
-        double* sItem;
+        double* fItem = 0;
+        double* sItem = 0;
         firstNearest = (Keypoint*)kd_res_item(res, fItem);
         kd_res_next(res);
-        secondNearest = kd_res_item(res, sItem);
+        secondNearest = (Keypoint*)kd_res_item(res, sItem);
     }
     else {
         firstNearest = 0;
@@ -53,27 +56,16 @@ int nearest(void* tr, const Descriptor *descriptor, Keypoint *firstNearest, Keyp
     return size;
 }
 
-void info(LibraryInfo *info)
-{
-    if(!info)
-        throw std::invalid_argument("pointer cannot be null");
-
-    info->info = QObject::tr("Библиотека libkdtree для обработки дескрипторов");
-    info->type = LibComparator;
-}
-
 void getLibraryAPIVersion(QString* version)
 {
-    if(!version)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(version);
 
     *version = LibraryAPIVersion();
 }
 
 void getDefaultValues(VectorDouble* params)
 {
-    if(!params)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(params);
 
     params->clear();
     params->push_back(1.5);
@@ -81,10 +73,43 @@ void getDefaultValues(VectorDouble* params)
 
 void getParamNames(QStringList* params)
 {
-    if(!params)
-        throw std::invalid_argument("pointer cannot be null");
+    ASERT_NOT_NULL(params);
 
     params->clear();
     params->push_back("Nearest descriptors rate");
 }
 
+class SingleInitKdTreeInfo : public SingleInit<LibraryInfo>
+{
+public:
+    SingleInitKdTreeInfo() : SingleInit<LibraryInfo>() {
+        _instance.info = QObject::tr("Библиотека libkdtree для обработки дескрипторов");
+        _instance.type = Comparator;
+    }
+};
+
+class SingleInitKdTreeApi : public SingleInit<ApiTree>
+{
+public:
+    SingleInitKdTreeApi() : SingleInit<ApiTree>() {
+        _instance._clear = &clear;
+        _instance.create = &create;
+        _instance._getDefaultValues = &getDefaultValues;
+        _instance._getParamNames = &getParamNames;
+        _instance.insert = &insert;
+        _instance.nearest = &nearest;
+        _instance.version = API_VERSION;
+    }
+};
+
+const LibraryInfo *info()
+{
+    static SingleInitKdTreeInfo si;
+    return si.instance();
+}
+
+const ApiTree *getApi()
+{
+    static SingleInitKdTreeApi si;
+    return si.instance();
+}

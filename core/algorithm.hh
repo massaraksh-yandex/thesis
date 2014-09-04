@@ -4,6 +4,7 @@
 #include <QFutureWatcher>
 
 #include "global_core.hh"
+#include "include/apialgorithm.hh"
 
 class LibraryLoader;
 class Algorithm : QObject
@@ -12,20 +13,7 @@ class Algorithm : QObject
 
     friend class LibraryLoader;
 
-    typedef void* (*Create)(CImageUnsigned* image, const VectorDouble*);
-    typedef void  (*Clear) (void*);
-    typedef void  (*Build) (void*, DescriptorArray*, KeypointList*);
-    typedef void  (*GetParams)(void*, VectorDouble*);
-    typedef void  (*GetDefaultValues)(VectorDouble*);
-    typedef void  (*GetParamNames)(QStringList*);
-
-    static Create _create;
-    static Clear _clear;
-    static Build _build;
-    static GetParams _getParams;
-    static GetDefaultValues _getDefaultValues;
-    static GetParamNames _getParamNames;
-
+    static ApiAlgorithm* api;
     static uint _mutex;
 
     void* _data;
@@ -33,7 +21,6 @@ class Algorithm : QObject
     KeypointList _keypointList;
 
     QFutureWatcher<void> _watchDog;
-
     bool _async;
 
 public:
